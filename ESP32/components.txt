@@ -1,0 +1,16 @@
+cd C:\Users\Dawid\Desktop\esp32\softAP
+
+
+idf.py fullclean
+idf.py set-target esp32s3
+idf.py add-dependency "espressif/esp32-camera"
+idf.py add-dependency "espressif/esp-dsp"
+idf.py add-dependency "espressif/led_strip"
+
+
+idf.py build
+
+
+
+
+idf.py menuconfig

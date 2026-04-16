@@ -1,0 +1,78 @@
+[1/5] cmd.exe /C "cd /D C:\Users\Dawid\Desktop\esp32\softAP\build\esp-idf\esptool_py && C:\Espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe C:/Espressif/frameworks/esp-idf-v5.3.1/components/partition_table/check_sizes.py --offset 0x8000 partition --type app C:/Users/Dawid/Desktop/esp32/softAP/build/partition_table/partition-table.bin C:/Users/Dawid/Desktop/esp32/softAP/build/wifi_softAP.bin"
+wifi_softAP.bin binary size 0xd21c0 bytes. Smallest app partition is 0x200000 bytes. 0x12de40 bytes (59%) free.
+[2/5] Performing build step for 'bootloader'
+[1/1] cmd.exe /C "cd /D C:\Users\Dawid\Desktop\esp32\softAP\build\bootloader\esp-idf\esptool_py && C:\Espressif\python_env\idf5.3_py3.11_env\Scripts\python.exe C:/Espressif/frameworks/esp-idf-v5.3.1/components/partition_table/check_sizes.py --offset 0x8000 bootloader 0x0 C:/Users/Dawid/Desktop/esp32/softAP/build/bootloader/bootloader.bin"
+Bootloader binary size 0x5390 bytes. 0x2c70 bytes (35%) free.
+[2/3] cmd.exe /C "cd /D C:\Espressif\frameworks\esp-idf-v5.3.1\components\esptool_py && C:\Espressif\tools\cmake\3.24.0\bin\cmake.exe -D IDF_PATH=C:/Espressif/frameworks/esp-idf-v5.3.1 -D SERIAL_TOOL=C:/Espressif/python_env/idf5.3_py3.11_env/Scripts/python.exe;;C:/Espressif/frameworks/esp-idf-v5.3.1/components/esptool_py/esptool/esptool.py;--chip;esp32s3 -D SERIAL_TOOL_ARGS=--before=default_reset;--after=hard_reset;write_flash;@flash_args -D WORKING_DIRECTORY=C:/Users/Dawid/Desktop/esp32/softAP/build -P C:/Espressif/frameworks/esp-idf-v5.3.1/components/esptool_pesptool.py --chip esp32s3 -p COM5 -b 460800 --before=default_reset --after=hard_reset write_flash --flash_mode dio --flash_freq 80m --flash_size 16MB 0x0 bootloader/bootloader.bin 0x20000 wifi_softAP.bin 0x8000 partition_table/partition-table.bin 0xf000 ota_data_initial.bin
+esptool.py v4.8.1
+Serial port COM5
+Connecting...
+Chip is ESP32-S3 (QFN56) (revision v0.2)
+Features: WiFi, BLE, Embedded PSRAM 8MB (AP_3v3)
+Crystal is 40MHz
+MAC: ac:a7:04:26:8a:00
+Uploading stub...
+Running stub...
+Stub running...
+Changing baud rate to 460800
+Changed.
+Configuring flash size...
+Flash will be erased from 0x00000000 to 0x00005fff...
+Flash will be erased from 0x00020000 to 0x000f2fff...
+Flash will be erased from 0x00008000 to 0x00008fff...
+Flash will be erased from 0x0000f000 to 0x00010fff...
+SHA digest in image updated
+Compressed 21392 bytes to 13332...
+Writing at 0x00000000... (100 %)
+Wrote 21392 bytes (13332 compressed) at 0x00000000 in 0.3 seconds (effective 512.3 kbit/s)...
+Hash of data verified.
+Compressed 860608 bytes to 569837...
+Writing at 0x00020000... (2 %)
+Writing at 0x0002dab4... (5 %)
+Writing at 0x000338f0... (8 %)
+Writing at 0x00038ad8... (11 %)
+Writing at 0x000421d9... (14 %)
+Writing at 0x00047b8f... (17 %)
+Writing at 0x0004d259... (20 %)
+Writing at 0x000527be... (22 %)
+Writing at 0x00057f0a... (25 %)
+Writing at 0x0005f125... (28 %)
+Writing at 0x00064f83... (31 %)
+Writing at 0x0006a2ec... (34 %)
+Writing at 0x0006f527... (37 %)
+Writing at 0x000748c2... (40 %)
+Writing at 0x00079ddf... (42 %)
+Writing at 0x0007f52e... (45 %)
+Writing at 0x00084d6a... (48 %)
+Writing at 0x0008a04a... (51 %)
+Writing at 0x0008f169... (54 %)
+Writing at 0x0009405e... (57 %)
+Writing at 0x000991be... (60 %)
+Writing at 0x0009e262... (62 %)
+Writing at 0x000a35c8... (65 %)
+Writing at 0x000a896b... (68 %)
+Writing at 0x000ae4d9... (71 %)
+Writing at 0x000b350f... (74 %)
+Writing at 0x000b8719... (77 %)
+Writing at 0x000bdd47... (80 %)
+Writing at 0x000c31fc... (82 %)
+Writing at 0x000cd192... (85 %)
+Writing at 0x000d439b... (88 %)
+Writing at 0x000db882... (91 %)
+Writing at 0x000e1f7f... (94 %)
+Writing at 0x000e7de5... (97 %)
+Writing at 0x000edaed... (100 %)
+Wrote 860608 bytes (569837 compressed) at 0x00020000 in 5.9 seconds (effective 1162.4 kbit/s)...
+Hash of data verified.
+Compressed 3072 bytes to 127...
+Writing at 0x00008000... (100 %)
+Wrote 3072 bytes (127 compressed) at 0x00008000 in 0.1 seconds (effective 236.0 kbit/s)...
+Hash of data verified.
+Compressed 8192 bytes to 31...
+Writing at 0x0000f000... (100 %)
+Wrote 8192 bytes (31 compressed) at 0x0000f000 in 0.1 seconds (effective 634.6 kbit/s)...
+Hash of data verified.
+
+Leaving...
+Hard resetting via RTS pin...
+y/run_serial_tool.cmake"
