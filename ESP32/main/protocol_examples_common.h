@@ -1,4 +1,5 @@
-/* Common functions for protocol examples, to establish Wi-Fi or Ethernet connection.
+/* Common functions for protocol examples, to establish Wi-Fi or Ethernet
+   connection.
 
    This example code is in the Public Domain (or CC0 licensed, at your option.)
 
@@ -9,8 +10,8 @@
 
 #pragma once
 
-#include "sdkconfig.h"
 #include "esp_err.h"
+#include "sdkconfig.h"
 #if !CONFIG_IDF_TARGET_LINUX
 #include "esp_netif.h"
 #if CONFIG_EXAMPLE_CONNECT_ETHERNET
@@ -67,7 +68,8 @@ extern "C" {
 #define EXAMPLE_WIFI_SCAN_AUTH_MODE_THRESHOLD WIFI_AUTH_WAPI_PSK
 #endif
 
-/* Example default interface, prefer the ethernet one if running in example-test (CI) configuration */
+/* Example default interface, prefer the ethernet one if running in example-test
+ * (CI) configuration */
 #if CONFIG_EXAMPLE_CONNECT_ETHERNET
 #define EXAMPLE_INTERFACE get_example_netif_from_desc(EXAMPLE_NETIF_DESC_ETH)
 #define get_example_netif() get_example_netif_from_desc(EXAMPLE_NETIF_DESC_ETH)
@@ -139,7 +141,7 @@ esp_eth_handle_t get_example_eth_handle(void);
 #endif // CONFIG_EXAMPLE_CONNECT_ETHERNET
 
 #else
-static inline esp_err_t example_connect(void) {return ESP_OK;}
+static inline esp_err_t example_connect(void) { return ESP_OK; }
 #endif // !CONFIG_IDF_TARGET_LINUX
 
 #ifdef __cplusplus
