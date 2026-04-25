@@ -10,6 +10,7 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -111,11 +112,14 @@ void run_setup_mode(void) {
     ESP_ERROR_CHECK(esp_event_handler_register(
         WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &connect_handler, &server_handle));
 
-    // Blink LED while waiting for the user to connect and submit credentials
+    // Alternate orange / blue every second so it's obvious we're in setup mode
+    bool led_on = true;
     while (!has_wifi) {
-        blink_led();
-        vTaskDelay(pdMS_TO_TICKS(10));
+        set_led(led_on ? 255 : 0, led_on ? 165 : 0, led_on ? 0 : 255);
+        led_on = !led_on;
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
+    set_led(0, 0, 0); // turn LED off once credentials are received
     ESP_LOGI(TAG, "Credentials received — SSID: %.*s", wifi_name.size, wifi_name.data);
 
     stop_webserver(server_handle);
