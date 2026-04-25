@@ -56,8 +56,8 @@ static camera_config_t camera_config = {
 	.pixel_format = PIXFORMAT_JPEG,
 	.frame_size = FRAMESIZE_HD,
 	.jpeg_quality = 30,
-	.fb_count = 2,						 // Wymaga PSRAM dla więcej niż 1 bufora
-	.grab_mode = CAMERA_GRAB_WHEN_EMPTY, // CAMERA_GRAB_LATEST
+	.fb_count = 1,
+	.grab_mode = CAMERA_GRAB_WHEN_EMPTY,
 	.fb_location = CAMERA_FB_IN_PSRAM};
 
 esp_err_t init_camera() {
@@ -67,20 +67,4 @@ esp_err_t init_camera() {
 		return err;
 	}
 	return ESP_OK;
-}
-
-int take_snapshot() {
-	camera_fb_t *fb = esp_camera_fb_get();
-
-	if (!fb) {
-		return 1;
-	}
-
-	// fb->buf
-	// fb->len
-	// fb->width
-	// fb->height
-
-	esp_camera_fb_return(fb);
-	return 0;
 }

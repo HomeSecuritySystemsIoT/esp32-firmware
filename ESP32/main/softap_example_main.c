@@ -7,14 +7,11 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include "esp_pthread.h"
-#include "esp_task_wdt.h"
 #define PTRSIZE sizeof(void *)
 #include <string.h>
-// #include <sys/_pthreadtypes.h>
 #include "camera.h"
 #include "esp_https_server.h"
 #include "esp_spiffs.h"
-#include "jpeg.h"
 #include "led.h"
 #include "station_wifi.h"
 #define UTF8_MAX_SIZE 4
@@ -330,6 +327,7 @@ huj:
 	//	return;
 	size_t packet_size, packet_i = 0;
 	int r, g, b;
+	camera_fb_t *fb = NULL;
 
 	int tcp_len, packet_length;
 	while (1) {
@@ -370,22 +368,15 @@ huj:
 						puts("esp_camera_fb_get() failed");
 						send(client_fd_udp, "\xff\xff\xff\xff", 4, 0);
 					} else {
-						// ret=sprintf(receive_buff,"%i",fb->len);
-						// printf("sending %i\n",fb->len);
 						send(client_fd_udp, &fb->len, 4, 0);
-						// send(client_fd_udp,fb->buf,fb->len,0);
 						packet_size = fb->len;
+						packet_i = 0;
 						while (packet_size) {
 							packet_size = fb->len > 1400 ? 1400 : fb->len;
-							send(client_fd_udp, fb->buf + packet_i, packet_size,
-								 0);
+							send(client_fd_udp, fb->buf + packet_i, packet_size, 0);
 							packet_i += packet_size;
 							fb->len -= packet_size;
 						}
-						// for(size_t i=0;i!=fb->len;i++){
-						//	printf("%hhx ",fb->buf[i]);
-						// }
-
 						esp_camera_fb_return(fb);
 					}
 					vTaskDelay(pdMS_TO_TICKS(10000));
@@ -410,195 +401,75 @@ huj:
 					ret = send(client_fd_tcp, ((char *)&packet_size) + packet_i,
 							   4 - packet_i, 0);
 					if (ret < 0) {
-						puts("L385 send() tcp error");
+						puts("send() tcp error");
 						return;
 					}
 					packet_i += ret;
 				}
-				puts("Size sent");
 				packet_i = 0;
 				while (packet_i != packet_size) {
 					ret = send(client_fd_tcp, receive_buff + packet_i,
 							   packet_size - packet_i, 0);
 					if (ret < 0) {
-						puts("L395 send() tcp error");
+						puts("send() tcp error");
 						return;
 					}
 					packet_i += ret;
 				}
-				puts("Buff sent");
-
-				jpeg_init();
-
-				printf("Wolna SRAM: %d bajtow\n",
-					   heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-
-				// Wolna pamięć PSRAM (zewnętrzna - tu masz 8MB w N16R8)
-				printf("Wolna PSRAM: %d bajtow\n",
-					   heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
-				// Największy ciągły blok (ważne, jeśli malloc zwraca NULL mimo
-				// wolnego miejsca)
-				printf("Największy blok SRAM: %d bajtów\n",
-					   heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-
-				pthread_mutex_init(&snapshot_muted, NULL);
-
-				xTaskCreatePinnedToCore(
-					(TaskFunction_t)
-						th1_func,	  // Twoja funkcja (pamiętaj o rzutowaniu)
-					"CameraAnalyzer", // Nazwa dla debuggera
-					16384,			  // ROZMIAR STOSU (w bajtach dla S3)
-					(void *)client_fd_udp, // Argument
-					5,					   // Priorytet
-					NULL,				   // Task handle
-					1					   // Rdzeń (Core 1)
-				);
-				esp_task_wdt_delete(NULL);
-				puts("th1 created");
-
-				th1_command = 0;
 
 				while (1) {
-					// start=clock();
-					if (th1_command == 0) {
-						// puts("th0 attempts to lock mutex");
-						pthread_mutex_lock(&snapshot_muted);
-						// puts("th0 locked mutex");
-					}
-
 					fb = esp_camera_fb_get();
 					if (!fb) {
 						puts("esp_camera_fb_get() failed");
 						send(client_fd_tcp, "\xff\xff\xff\xff", 4, 0);
-						if (th1_command == 0) {
-							// puts("th0 attempts to unlock mutex");
-							pthread_mutex_unlock(&snapshot_muted);
-							// puts("th0 unlocked mutex");
-						}
 						continue;
 					}
-					// end=clock();
-					// printf("snapshot %lli\n",end-start);
-					// start=clock();
+
 					ret = recv(client_fd_tcp, receive_buff, 1, 0);
 					if (ret <= 0) {
 						puts("Sync error");
+						esp_camera_fb_return(fb);
 						return;
 					}
-					// printf("Command : %c\n",*receive_buff);
+
 					switch (*receive_buff) {
 					case 'G':
-						// puts("th0 attempts to unlock mutex");
-						if (th1_command == 0)
-							pthread_mutex_unlock(&snapshot_muted);
-						// puts("th0 unlocked mutex");
-						break;
-					case 'M':
-						// turns on motion detection
-						th1_command = 0;
-						puts("Motion detection turned on");
-						// puts("th0 attempts to unlock mutex");
-						pthread_mutex_unlock(&snapshot_muted);
-						// puts("th0 unlocked mutex");
-						break;
-					case 'N':
-						// turns off motion detection
-						puts("Motion detection turned off");
-						th1_command = 1;
-						analysis_init = 0;
 						break;
 					case 'S':
-						// esp_camera_fb_return(fb);
-						// esp_camera_deinit();
-						// fb=NULL;
-						// turns off camera feed
-						puts("Camera feed turned off");
-						th1_command = 1;
-						int wait = 1;
-						while (wait) {
+						puts("Camera feed paused");
+						esp_camera_fb_return(fb);
+						fb = NULL;
+						while (1) {
 							ret = recv(client_fd_tcp, receive_buff, 1, 0);
-							if (ret <= 0) {
-								exit(400);
-							}
-							switch (*receive_buff) {
-							case 'G':
-								wait = 0;
-								puts("Camera feed turned on");
-								// init_camera();
-								pthread_mutex_unlock(&snapshot_muted);
-								break;
-							case 'M':
-								// turns on motion detection
-								puts("Motion detection turned on");
-								th1_command = 0;
-								break;
-							case 'N':
-								puts("Motion detection turned off");
-								// turns off motion detection
-								th1_command = 1;
-								analysis_init = 0;
+							if (ret <= 0) { exit(400); }
+							if (*receive_buff == 'G') {
+								puts("Camera feed resumed");
 								break;
 							}
 						}
-
-						break;
-
+						continue;
 					default:
 						puts("Unknown command");
 						break;
 					}
 
-					// end=clock();
-					// printf("sync %lli\n",end-start);
-
-					// start=clock();
-
 					packet_i = 0;
 					while (packet_i != 4) {
 						ret = send(client_fd_tcp, ((char *)&fb->len) + packet_i,
 								   4 - packet_i, 0);
-						if (ret <= 0)
-							break;
+						if (ret <= 0) break;
 						packet_i += ret;
 					}
 					packet_i = 0;
-					// memset(counts,0,1024);
 					while (packet_i != fb->len) {
 						ret = send(client_fd_tcp, fb->buf + packet_i,
 								   fb->len - packet_i, 0);
-						if (ret <= 0)
-							break;
+						if (ret <= 0) break;
 						packet_i += ret;
-						// for (size_t i = packet_i-ret; i != packet_i; i++) {
-						//		counts[fb->buf[i]]++;
-						//}
-					}
-
-					// printf("%zu :",fb->len);
-					// for (size_t i = 0; i != 256; i++) {
-					///    	printf(" %zu:%i ",i,counts[i]);
-					//}
-					// puts("");
-
-					// end=clock();
-					// printf("sending %lli\n",end-start);
-
-					if (th1_command == 0) {
-						// puts("th0 attempts to lock mutex");
-						pthread_mutex_lock(&snapshot_muted);
-						// puts("th0 locked mutex");
 					}
 
 					esp_camera_fb_return(fb);
-					if (th1_command == 0) {
-						fb = NULL;
-						// puts("th0 attempts to unlock mutex");
-						pthread_mutex_unlock(&snapshot_muted);
-						// puts("th0 unlocked mutex");
-					}
-
-					// vTaskDelay(pdMS_TO_TICKS(1));
+					vTaskDelay(pdMS_TO_TICKS(33)); // ~30fps cap, reduces sensor heat
 				}
 
 			} else if ((memcmp(receive_buff, "/led/", 5) == 0)) {
