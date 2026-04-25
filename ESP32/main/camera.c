@@ -13,8 +13,8 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#define CAM_PIN_PWDN -1	 // Lub konkretny GPIO, np. 38
-#define CAM_PIN_RESET -1 // Lub konkretny GPIO, np. 39
+#define CAM_PIN_PWDN -1	 // Or a specific GPIO, e.g. 38
+#define CAM_PIN_RESET -1 // Or a specific GPIO, e.g. 39
 #define CAM_PIN_XCLK 15
 #define CAM_PIN_SIOD 4
 #define CAM_PIN_SIOC 5

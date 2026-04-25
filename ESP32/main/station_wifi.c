@@ -115,7 +115,7 @@ static void station_event_handler(void *arg, esp_event_base_t event_base,
 		//} else {
 		wifi_event_sta_disconnected_t *disconnected =
 			(wifi_event_sta_disconnected_t *)event_data;
-		ESP_LOGE("WIFI_STATUS", "WYRZUCILO BŁĄD. Kod powodu: %d",
+		ESP_LOGE("WIFI_STATUS", "Connection failed. Reason code: %d",
 				 disconnected->reason);
 		xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
 		//    force_stop=1;
