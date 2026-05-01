@@ -20,7 +20,7 @@
 #include"str.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
+#include "wifi_common.h"
 /* The examples use WiFi configuration that you can set via project configuration menu
 
    If you'd rather not, just change the below entries to strings with
@@ -70,7 +70,7 @@ static EventGroupHandle_t s_wifi_event_group=NULL;
 static int force_stop=0;
 static esp_event_handler_instance_t instance_any_id=NULL,
     instance_got_ip=NULL;
-#include"wifi_common.h"
+    
 extern int wifi_mode;
 void wifi_destroy(){
 	force_stop = 1; 

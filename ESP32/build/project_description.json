@@ -1240,7 +1240,7 @@
             "managed_reqs": [],
             "managed_priv_reqs": [ "espressif__esp-dsp", "espressif__esp32-camera", "espressif__led_strip" ],
             "file": "C:/Users/Dawid/Desktop/esp32/softAP/build/esp-idf/main/libmain.a",
-            "sources": [ "C:/Users/Dawid/Desktop/esp32/softAP/main/softap_example_main.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/station_wifi.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/camera.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/calc_diff.S", "C:/Users/Dawid/Desktop/esp32/softAP/main/jpeg.cpp", "C:/Users/Dawid/Desktop/esp32/softAP/main/led.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/http_website.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/JPEGDEC/JPEGDEC.cpp", "C:/Users/Dawid/Desktop/esp32/softAP/build/servercert.pem.S", "C:/Users/Dawid/Desktop/esp32/softAP/build/prvtkey.pem.S" ],
+            "sources": [ "C:/Users/Dawid/Desktop/esp32/softAP/main/softap_example_main.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/station_wifi.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/soft_ap_sub.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/camera.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/server_reacher.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/jpeg.cpp", "C:/Users/Dawid/Desktop/esp32/softAP/main/led.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/http_website.c", "C:/Users/Dawid/Desktop/esp32/softAP/main/JPEGDEC/JPEGDEC.cpp", "C:/Users/Dawid/Desktop/esp32/softAP/main/wifi_common.c", "C:/Users/Dawid/Desktop/esp32/softAP/build/servercert.pem.S", "C:/Users/Dawid/Desktop/esp32/softAP/build/prvtkey.pem.S" ],
             "include_dirs": [ "." ]
         },
         "mbedtls": {

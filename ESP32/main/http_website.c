@@ -42,8 +42,9 @@ size_t cast_hex(size_t t){
 
 #include"str.h"
 #include"http_website.h"
-//vstr wifi_name,wifi_password;
-//int has_wifi=0;
+httpd_handle_t *SERVER;
+vstr wifi_name,wifi_password;
+int has_wifi=0;
 /* Event handler for catching system events */
  void event_handler(void* arg, esp_event_base_t event_base,
                           int32_t event_id, void* event_data)

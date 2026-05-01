@@ -77,7 +77,7 @@ extern "C" void* th1_func(void* socket){
 	uint8_t *buff = (uint8_t *)heap_caps_aligned_alloc(16,GS_WIDTH*GS_HEIGHT*2, MALLOC_CAP_SPIRAM);
 	if(!buff)	exit(556);
 	puts("TH1 buffers allocated!");
-	esp_task_wdt_delete(NULL); // Usuń obecne zadanie z monitoringu Watchdoga
+	esp_task_wdt_delete(NULL); 
 	time_t start,end;
 	
 	grayscale[0]=buff;
