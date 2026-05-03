@@ -39,6 +39,7 @@
 #include <time.h>      
 #include <sys/types.h> 
 #include<pthread.h>
+#include "esp_sntp.h"
 #define EXAMPLE_ESP_WIFI_SSID      CONFIG_ESP_WIFI_SSID
 #define EXAMPLE_ESP_WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_WIFI_CHANNEL   CONFIG_ESP_WIFI_CHANNEL

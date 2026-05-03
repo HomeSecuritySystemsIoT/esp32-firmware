@@ -93,7 +93,7 @@ extern "C" void* th1_func(void* socket){
 		pthread_mutex_lock(&snapshot_muted);
 		
 		//puts("TH1 locked mutex");
-		if(!fb){		//||th1_command==0 obligatoire
+		if(!fb){		
 			//puts("(!fb) th1 attempts to unlock");
 			pthread_mutex_unlock(&snapshot_muted);
 			//puts("(!fb)th1 unlocks");
