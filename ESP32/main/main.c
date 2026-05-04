@@ -11,7 +11,8 @@
 void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 	switch (*receive_buff) {
 	case 'P':
-		// puts("Pong!");
+		// just to keep alive the connection
+		puts("Pong");
 		break;
 	case 'I':
 		// puts("0");
