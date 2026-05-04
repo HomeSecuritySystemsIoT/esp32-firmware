@@ -8,81 +8,6 @@
 #define SERVER_IP_LENGTH 14
 #define SERVER_PORT 7893
 
-void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
-	switch (*receive_buff) {
-	case 'P':
-		// just to keep alive the connection
-		puts("Pong");
-		break;
-	case 'I':
-		// puts("0");
-		break;
-	case 'G':
-		// puts("th0 attempts to unlock mutex");
-		// if(th1_command==0)
-		//	pthread_mutex_unlock(&snapshot_muted);
-		// puts("th0 unlocked mutex");
-		break;
-	case 'M':
-		// turns on motion detection
-		// th1_command=0;
-		puts("Motion detection turned on");
-		// puts("th0 attempts to unlock mutex");
-		// pthread_mutex_unlock(&snapshot_muted);
-		// puts("th0 unlocked mutex");
-		break;
-	case 'N':
-		// turns off motion detection
-		puts("Motion detection turned off");
-		// th1_command=1;
-		// analysis_init=0;
-		break;
-	case 'S':
-		// esp_camera_fb_return(fb);
-		// esp_camera_deinit();
-		// fb=NULL;
-		// turns off camera feed
-		puts("Camera feed turned off");
-		// th1_command=1;
-		int wait = 1;
-		while (wait) {
-			ssize_t ret = esp_tls_conn_read(tls, receive_buff, 1);
-			if (ret <= 0) {
-				esp_camera_fb_return(fb);
-				esp_tls_conn_destroy(tls);
-				exit(400);
-			}
-			switch (*receive_buff) {
-			case 'G':
-				wait = 0;
-				puts("Camera feed turned on");
-				// init_camera();
-				// if(th1_command==0)
-				//	pthread_mutex_unlock(&snapshot_muted);
-				break;
-			case 'M':
-				// turns on motion detection
-				puts("Motion detection turned on");
-				// th1_command=0;
-				break;
-			case 'N':
-				puts("Motion detection turned off");
-				// turns off motion detection
-				// th1_command=1;
-				// analysis_init=0;
-				break;
-			}
-		}
-		// if(th1_command==0)
-		//	pthread_mutex_unlock(&snapshot_muted);  //Necessary,but test
-		break;
-
-	default:
-		puts("Unknown command");
-		break;
-	}
-}
-
 static void init_system_and_storage(void) {
 	// nvs_flash_erase();
 	esp_err_t ret = nvs_flash_init();
@@ -131,8 +56,7 @@ static void init_threads(void) {
 static void setup_wifi(void) {
 	FILE *wififile = fopen("/spiffs/wf", "rb");
 	wifi_name.data = (char *)malloc(98 * UTF8_MAX_SIZE);
-	if (!wifi_name.data)
-		exit(556);
+	if (!wifi_name.data) exit(556);
 
 	wifi_password.data = wifi_name.data + 33 * UTF8_MAX_SIZE;
 	wifi_name.size = 0;
@@ -318,18 +242,151 @@ static struct esp_tls *startup_phase(char *receive_buff, int *client_fd_tcp) {
 	prepare_runtime();
 
 	struct esp_tls *tls = connect_tls_server();
-	if (!tls) {
-		return NULL;
-	}
+	if (!tls) return NULL;
 
 	configure_tls_socket(tls, client_fd_tcp);
 
-	if (init_camera_and_send_status(tls, receive_buff) != 0) {
-		return NULL;
-	}
+	if (init_camera_and_send_status(tls, receive_buff) != 0) return NULL;
 
 	return tls;
 }
+
+void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
+	switch (*receive_buff) {
+	case 'P':
+		// just to keep alive the connection
+		puts("Pong");
+		break;
+	case 'I':
+		// puts("0");
+		break;
+	case 'G':
+		// puts("th0 attempts to unlock mutex");
+		// if(th1_command==0)
+		//	pthread_mutex_unlock(&snapshot_muted);
+		// puts("th0 unlocked mutex");
+		break;
+	case 'M':
+		// turns on motion detection
+		// th1_command=0;
+		puts("Motion detection turned on");
+		// puts("th0 attempts to unlock mutex");
+		// pthread_mutex_unlock(&snapshot_muted);
+		// puts("th0 unlocked mutex");
+		break;
+	case 'N':
+		// turns off motion detection
+		puts("Motion detection turned off");
+		// th1_command=1;
+		// analysis_init=0;
+		break;
+	case 'S':
+		// esp_camera_fb_return(fb);
+		// esp_camera_deinit();
+		// fb=NULL;
+		// turns off camera feed
+		puts("Camera feed turned off");
+		// th1_command=1;
+		int wait = 1;
+		while (wait) {
+			ssize_t ret = esp_tls_conn_read(tls, receive_buff, 1);
+			if (ret <= 0) {
+				esp_camera_fb_return(fb);
+				esp_tls_conn_destroy(tls);
+				exit(400);
+			}
+			switch (*receive_buff) {
+			case 'G':
+				wait = 0;
+				puts("Camera feed turned on");
+				// init_camera();
+				break;
+			case 'M':
+				// turns on motion detection
+				puts("Motion detection turned on");
+				// th1_command=0;
+				break;
+			case 'N':
+				puts("Motion detection turned off");
+				// turns off motion detection
+				break;
+			}
+		}
+		break;
+
+	default:
+		puts("Unknown command");
+		break;
+	}
+}
+
+static int capture_frame(struct esp_tls *tls) {
+	esp_err_t ret;
+
+	fb = esp_camera_fb_get();
+	if (!fb) {
+		puts("esp_camera_fb_get() failed");
+		ret = esp_tls_conn_write(tls, "\xff\xff\xff\xff", 4);
+		if (ret <= 0) {
+			esp_tls_conn_destroy(tls);
+			esp_camera_fb_return(fb);
+			return -1;
+		}
+		return 1;
+	}
+
+	return 0;
+}
+
+static int sync_and_handle_command(struct esp_tls *tls, char *receive_buff) {
+	esp_err_t ret = esp_tls_conn_read(tls, receive_buff, 1);
+	if (ret <= 0) {
+		puts("Sync error");
+		esp_tls_conn_destroy(tls);
+		esp_camera_fb_return(fb);
+		return -1;
+	}
+
+	handle_command(tls, fb, receive_buff);
+	return 0;
+}
+
+static int send_frame_len(struct esp_tls *tls) {
+	esp_err_t ret;
+	size_t packet_i = 0;
+
+	while (packet_i != 4) {
+		ret = esp_tls_conn_write(tls, ((char *)&fb->len) + packet_i,
+								 4 - packet_i);
+		if (ret <= 0) {
+			esp_camera_fb_return(fb);
+			esp_tls_conn_destroy(tls);
+			return -1;
+		}
+		packet_i += ret;
+	}
+
+	return 0;
+}
+
+static int send_frame_buf(struct esp_tls *tls) {
+	esp_err_t ret;
+	size_t packet_i = 0;
+
+	while (packet_i != fb->len) {
+		ret = esp_tls_conn_write(tls, fb->buf + packet_i, fb->len - packet_i);
+		if (ret <= 0) {
+			esp_camera_fb_return(fb);
+			esp_tls_conn_destroy(tls);
+			return -1;
+		}
+		packet_i += ret;
+	}
+
+	return 0;
+}
+
+static void release_frame(void) { esp_camera_fb_return(fb); }
 
 void app_main(void) {
 	init_system_and_storage();
@@ -345,8 +402,6 @@ void app_main(void) {
 	// socket(AF_INET,SOCK_DGRAM,ip_protocol)
 	// socket(AF_INET,SOCK_STREAM,ip_protocol)
 	int client_fd_tcp;
-	esp_err_t ret;
-	size_t packet_i = 0;
 
 	struct esp_tls *tls = startup_phase(receive_buff, &client_fd_tcp);
 	if (!tls) {
@@ -369,93 +424,16 @@ void app_main(void) {
 
 	print_system_info();
 	esp_task_wdt_delete(NULL);
-	// puts("th1 created");
-
-	// th1_command=1;
 
 	while (1) {
-		// start=clock();
-		// if(th1_command==0){
-		// puts("th0 attempts to lock mutex");
-		// pthread_mutex_lock(&snapshot_muted);
-		// puts("th0 locked mutex");
-		//}
+		int ret2 = capture_frame(tls);
 
-		fb = esp_camera_fb_get();
-		if (!fb) {
-			puts("esp_camera_fb_get() failed");
-			ret = esp_tls_conn_write(tls, "\xff\xff\xff\xff", 4);
-			if (ret <= 0) {
-				esp_tls_conn_destroy(tls);
-				esp_camera_fb_return(fb);
-				return;
-			}
-			// if(th1_command==0){
-			// puts("th0 attempts to unlock mutex");
-			//	pthread_mutex_unlock(&snapshot_muted);
-			// puts("th0 unlocked mutex");
-			//}
-			continue;
-		}
-		// end=clock();
-		// printf("snapshot %lli\n",end-start);
-		// start=clock();
-		// puts("L447");
-		ret = esp_tls_conn_read(tls, receive_buff, 1);
-		if (ret <= 0) {
-			puts("Sync error");
-			esp_tls_conn_destroy(tls);
-			esp_camera_fb_return(fb);
-			return;
-		}
+		if (ret2 < 0) return;
+		if (ret2 > 0) continue;
 
-		// handle incoming commands
-		handle_command(tls, fb, receive_buff);
-
-		// end=clock();
-		// printf("sync %lli\n",end-start);
-
-		// start=clock();
-
-		packet_i = 0;
-		while (packet_i != 4) {
-			// puts("L535");
-			ret = esp_tls_conn_write(tls, ((char *)&fb->len) + packet_i,
-									 4 - packet_i);
-			if (ret <= 0) {
-				esp_camera_fb_return(fb);
-				esp_tls_conn_destroy(tls);
-				return;
-			}
-			packet_i += ret;
-		}
-		packet_i = 0;
-		// memset(counts,0,1024);
-		while (packet_i != fb->len) {
-			// puts("L545");
-			ret =
-				esp_tls_conn_write(tls, fb->buf + packet_i, fb->len - packet_i);
-			// printf("ret %i\n",ret);
-			if (ret <= 0) {
-				esp_camera_fb_return(fb);
-				esp_tls_conn_destroy(tls);
-				return;
-			}
-			// printf("%u / %u\n",packet_i,fb->len);
-			packet_i += ret;
-			// for (size_t i = packet_i-ret; i != packet_i; i++) {
-			//		counts[fb->buf[i]]++;
-			//}
-		}
-		// printf("%u / %u\n",fb->len,fb->len);
-		// printf("%zu :",fb->len);
-		// for (size_t i = 0; i != 256; i++) {
-		///    	printf(" %zu:%i ",i,counts[i]);
-		//}
-		// puts("");
-
-		// end=clock();
-
-		esp_camera_fb_return(fb);
+		if (sync_and_handle_command(tls, receive_buff) < 0) return;
+		if (send_frame_len(tls) < 0) return;
+		if (send_frame_buf(tls) < 0) return;
+		release_frame();
 	}
 }
