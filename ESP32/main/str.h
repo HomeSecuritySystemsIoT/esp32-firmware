@@ -7,9 +7,9 @@
 
 #ifndef MAIN_STR_H_
 #define MAIN_STR_H_
-#include<stddef.h>
+#include <stddef.h>
 struct vstr_t {
-	char* data;
+	char *data;
 	size_t size;
 };
 #define vstr struct vstr_t
