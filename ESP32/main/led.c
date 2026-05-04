@@ -25,8 +25,13 @@ void configure_led(void) {
 	if (led_strip_new_rmt_device(&strip_config, &rmt_config, &led_strip)) {
 		puts("led_strip_new_rmt_device() error");
 	}
-	pixel_buff_led = get_pixel_buf_led();
+	// pixel_buff_led = get_pixel_buf_led();
 	led_strip_clear(led_strip);
+}
+
+void set_led(int red, int green, int blue) {
+	led_strip_set_pixel(led_strip, 0, red, green, blue);
+	led_strip_refresh(led_strip);
 }
 
 void blink_led(void) {
@@ -52,39 +57,12 @@ void blink_led(void) {
 	if ((r == 255) && (g == 0) && (b != 0)) {
 		b--;
 	}
-	// ESP_LOGI(TAG, "%i %i %i\n",r,g,b);
-	pixel_buff_led[0] = g; // GREEN
-	pixel_buff_led[1] = r; // RED
-	pixel_buff_led[2] = b; // BLUE
-
-	led_strip_refresh(led_strip);
-	// color=(color&0xff000000)?0:color+1;
-	// led_strip_set_pixel(led_strip, 0, pixel_buf[0], pixel_buf[1],
-	// pixel_buf[2]);
-
-	// led_strip_rmt_refresh_handle(led_strip);
-	//} else {
-	//   led_strip_clear(led_strip);
-	//}
-}
-
-void set_led(int red, int green, int blue) {
-	// if (s_led_state) {
-	// led_strip_rmt_set_pixel_handle_unoff(led_strip, 0, color&0xff,
-	// (color>>8)&0xff, (color>>16));
 
 	// ESP_LOGI(TAG, "%i %i %i\n",r,g,b);
-	pixel_buff_led[0] = green; // GREEN
-	pixel_buff_led[1] = red;   // RED
-	pixel_buff_led[2] = blue;  // BLUE
+	// pixel_buff_led[0] = g; // GREEN
+	// pixel_buff_led[1] = r; // RED
+	// pixel_buff_led[2] = b; // BLUE
 
+	set_led(r, g, b);
 	led_strip_refresh(led_strip);
-	// color=(color&0xff000000)?0:color+1;
-	// led_strip_set_pixel(led_strip, 0, pixel_buf[0], pixel_buf[1],
-	// pixel_buf[2]);
-
-	// led_strip_rmt_refresh_handle(led_strip);
-	//} else {
-	//   led_strip_clear(led_strip);
-	//}
 }
