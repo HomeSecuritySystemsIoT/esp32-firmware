@@ -1,1 +1,3 @@
 ESP32/managed_components/
+ESP32/build/
+ESP32/main/certs_com/*key
