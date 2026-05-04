@@ -27,10 +27,7 @@ static void init_system_and_storage(void) {
 								  .max_files = 1,
 								  .format_if_mount_failed = true};
 	ret = esp_vfs_spiffs_register(&conf);
-	// goto huj;
-	// if(!remove("/spiffs/wf")){
-	//	puts("removed");
-	// }
+
 	if (ret != ESP_OK) {
 		printf("esp_vfs_spiffs_register(): %u\n", ret);
 	}
@@ -268,22 +265,13 @@ void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 		break;
 	case 'M':
 		// turns on motion detection
-		// th1_command=0;
 		puts("Motion detection turned on");
-		// puts("th0 attempts to unlock mutex");
-		// pthread_mutex_unlock(&snapshot_muted);
-		// puts("th0 unlocked mutex");
 		break;
 	case 'N':
 		// turns off motion detection
 		puts("Motion detection turned off");
-		// th1_command=1;
-		// analysis_init=0;
 		break;
 	case 'S':
-		// esp_camera_fb_return(fb);
-		// esp_camera_deinit();
-		// fb=NULL;
 		// turns off camera feed
 		puts("Camera feed turned off");
 		// th1_command=1;
@@ -399,28 +387,12 @@ void app_main(void) {
 	char receive_buff[1025];
 	receive_buff[1024] = 0;
 
-	// socket(AF_INET,SOCK_DGRAM,ip_protocol)
-	// socket(AF_INET,SOCK_STREAM,ip_protocol)
 	int client_fd_tcp;
 
 	struct esp_tls *tls = startup_phase(receive_buff, &client_fd_tcp);
 	if (!tls) {
 		return;
 	}
-
-	// pthread_mutex_init(&snapshot_muted, NULL);
-
-	/*
-	xTaskCreatePinnedToCore(
-		(TaskFunction_t)th1_func, // Your function (remember to cast it)
-		"CameraAnalyzer",         // Name for the debugger
-		16384,                    // STACK SIZE (in bytes for the S3)
-		(void*)client_fd_udp,     // Argument
-		5,                        // Priority
-		NULL,                     // Task handle
-		1                         // Core (Core 1)
-	);
-	*/
 
 	print_system_info();
 	esp_task_wdt_delete(NULL);
