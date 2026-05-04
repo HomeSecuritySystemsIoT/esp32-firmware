@@ -66,3 +66,5 @@ void blink_led(void) {
 	set_led(r, g, b);
 	led_strip_refresh(led_strip);
 }
+
+void init_leds(void) { configure_led(); }
