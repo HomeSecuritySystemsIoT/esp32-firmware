@@ -342,6 +342,19 @@ static struct esp_tls *startup_phase(char *receive_buff, int *client_fd_tcp) {
 
 	configure_tls_socket(tls, client_fd_tcp);
 
+	// Identify handshake: server sends 'I', we reply with our MAC address +
+	// '\n'
+	char cmd = 0;
+	esp_tls_conn_read(tls, &cmd, 1);
+	if (cmd == 'I') {
+		uint8_t mac[6];
+		esp_wifi_get_mac(WIFI_IF_STA, mac);
+		char mac_str[20];
+		snprintf(mac_str, sizeof(mac_str), "%02X:%02X:%02X:%02X:%02X:%02X\n",
+				 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		esp_tls_conn_write(tls, mac_str, strlen(mac_str));
+	}
+
 	if (init_camera_and_send_status(tls, receive_buff) != 0) return NULL;
 
 	return tls;
