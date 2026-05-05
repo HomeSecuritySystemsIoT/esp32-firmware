@@ -28,14 +28,19 @@ struct esp_tls *tls_connect(const char *hostname, int hostname_len, int port,
 							esp_tls_cfg_t *cfg) {
 
 	struct esp_tls *tls = esp_tls_init();
-	;
+
 	int ret = esp_tls_conn_new_sync(hostname, hostname_len, port, cfg, tls);
 	if (ret == 1) {
 		printf("Succesfully connected to %.*s:%i\n", hostname_len, hostname,
 			   port);
 	} else {
 		int esp_tls_code = 0, mbedtls_code = 0;
-		esp_tls_get_and_clear_last_error(tls, &esp_tls_code, &mbedtls_code);
+
+		esp_tls_error_handle_t tls_error_handle;
+		esp_tls_get_error_handle(tls, &tls_error_handle);
+		esp_tls_get_and_clear_last_error(tls_error_handle, &esp_tls_code,
+										 &mbedtls_code);
+
 		printf("Failed to connect to %.*s:%i ESP-TLS: 0x%x, mbedTLS: 0x%x",
 			   hostname_len, hostname, port, esp_tls_code, -mbedtls_code);
 		esp_tls_conn_destroy(tls);
