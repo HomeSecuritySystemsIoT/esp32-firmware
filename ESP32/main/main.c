@@ -401,7 +401,6 @@ void app_main(void) {
 		int ret2 = capture_frame(tls);
 
 		if (ret2 < 0) return;
-		if (ret2 > 0) continue;
 
 		if (sync_and_handle_command(tls, receive_buff) < 0) return;
 		if (send_frame_len(tls) < 0) return;
