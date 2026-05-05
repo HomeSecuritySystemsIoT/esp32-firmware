@@ -1,3 +1,4 @@
+#include "esp_crt_bundle.h"
 #include "esp_http_client.h"
 #include "includes.h"
 #include "soft_ap_sub.h"
@@ -79,7 +80,7 @@ static void register_device_with_backend(void) {
 	esp_http_client_config_t config = {
 		.url = url,
 		.method = HTTP_METHOD_POST,
-		.skip_cert_common_name_check = true,
+		.crt_bundle_attach = esp_crt_bundle_attach,
 	};
 	esp_http_client_handle_t client = esp_http_client_init(&config);
 	if (!client) {
@@ -224,7 +225,6 @@ static void setup_wifi(void) {
 		}
 	}
 
-	free(wifi_name.data);
 	set_led(0, 0, 0);
 }
 
@@ -483,6 +483,7 @@ void app_main(void) {
 	if (claim_token.size > 0) {
 		register_device_with_backend();
 	}
+	free(wifi_name.data);
 	prepare_runtime();
 
 	xTaskCreate(reset_button_task, "reset_button_task", 4096, NULL, 5, NULL);

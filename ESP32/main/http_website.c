@@ -83,12 +83,17 @@ static int url_decode_field(const char *src, char *dst, int max_len) {
 	return n;
 }
 
-/* Finds key= in url-encoded body, writes value into dst, returns bytes written
- * or 0 */
+/* Finds key= in url-encoded body anchored to field boundaries (&key= or start),
+ * writes value into dst, returns bytes written or 0 */
 static int extract_field(const char *body, const char *key, char *dst,
 						 int max_len) {
-	char search[16];
-	snprintf(search, sizeof(search), "%s=", key);
+	int klen = strlen(key);
+	/* match at start of body */
+	if (strncmp(body, key, klen) == 0 && body[klen] == '=')
+		return url_decode_field(body + klen + 1, dst, max_len);
+	/* match after & separator */
+	char search[18];
+	snprintf(search, sizeof(search), "&%s=", key);
 	const char *p = strstr(body, search);
 	if (!p) return 0;
 	p += strlen(search);
