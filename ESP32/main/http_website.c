@@ -9,21 +9,20 @@
 
 #include "esp_eth.h"
 #include "esp_netif.h"
+#include "esp_tls.h"
+#include "mbedtls/base64.h"
 #include "protocol_examples_common.h"
+#include "sdkconfig.h"
 #include <esp_event.h>
+#include <esp_https_server.h>
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_wifi.h>
 #include <nvs_flash.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/param.h>
-// #include "esp_camera.h"
-#include "esp_tls.h"
-#include "sdkconfig.h"
-#include <esp_https_server.h>
-// #include<CamS3Library.h>
-/* A simple example that demonstrates how to create GET and POST
- * handlers and start an HTTPS server.
- */
 
 size_t cast_hex(size_t t) {
 	if (t >= '0' && t <= '9') {
@@ -43,7 +42,9 @@ size_t cast_hex(size_t t) {
 #include "str.h"
 httpd_handle_t *SERVER;
 vstr wifi_name, wifi_password;
+vstr claim_token, backend_url;
 int has_wifi = 0;
+
 /* Event handler for catching system events */
 void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
 				   void *event_data) {
@@ -61,77 +62,168 @@ void event_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
 	}
 }
 
-/* An HTTP GET handler */
+/* Decodes a URL-encoded field value from src into dst (max max_len bytes).
+   Stops at '&', end of string, or max_len. Returns number of bytes written. */
+static int url_decode_field(const char *src, char *dst, int max_len) {
+	int n = 0;
+	while (*src && *src != '&' && n < max_len) {
+		if (*src == '+') {
+			*dst++ = ' ';
+			src++;
+		} else if (*src == '%' && src[1] && src[2]) {
+			*dst++ = (char)((cast_hex((unsigned char)src[1]) << 4) |
+							cast_hex((unsigned char)src[2]));
+			src += 3;
+		} else {
+			*dst++ = *src++;
+		}
+		n++;
+	}
+	*dst = '\0';
+	return n;
+}
+
+/* Finds key= in url-encoded body, writes value into dst, returns bytes written
+ * or 0 */
+static int extract_field(const char *body, const char *key, char *dst,
+						 int max_len) {
+	char search[16];
+	snprintf(search, sizeof(search), "%s=", key);
+	const char *p = strstr(body, search);
+	if (!p) return 0;
+	p += strlen(search);
+	return url_decode_field(p, dst, max_len);
+}
+
+/* Extracts a JSON string value: finds "key":"<value>" and copies value into dst
+ */
+static int json_get_string(const char *json, const char *key, char *dst,
+						   int max_len) {
+	char search[32];
+	snprintf(search, sizeof(search), "\"%s\":\"", key);
+	const char *p = strstr(json, search);
+	if (!p) return 0;
+	p += strlen(search);
+	int n = 0;
+	while (*p && *p != '"' && n < max_len)
+		dst[n++] = *p++;
+	dst[n] = '\0';
+	return n;
+}
+
+/* Root HTML page — no JavaScript, works on any browser/platform */
+static const char root_html[] =
+	"<!DOCTYPE html><html><head>"
+	"<meta charset=\"utf-8\">"
+	"<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+	"<title>ESP32 Setup</title>"
+	"<style>"
+	"body{font-family:sans-serif;max-width:400px;margin:40px auto;padding:16px}"
+	"label{display:block;margin-top:14px;font-size:.9em;font-weight:bold}"
+	"input{width:100%;padding:8px;margin:4px "
+	"0;box-sizing:border-box;border:1px solid #ccc;border-radius:4px}"
+	"input[type=submit]{background:#28a745;color:#fff;border:none;padding:10px;"
+	"cursor:pointer;margin-top:16px;font-size:1em}"
+	".hint{font-size:.8em;color:#555;margin:12px 0;line-height:1.5}"
+	"</style></head><body>"
+	"<h2>ESP32 Camera Setup</h2>"
+	"<p class=\"hint\">"
+	"1. In the dashboard click <b>Add Camera</b> to show a QR code.<br>"
+	"2. Scan it with your phone camera and copy the text it shows.<br>"
+	"3. Paste that text below, fill in your WiFi details, then submit."
+	"</p>"
+	"<form method=\"POST\" action=\"/\">"
+	"<label>Code from QR scan</label>"
+	"<input type=\"text\" name=\"q\" required placeholder=\"Paste the copied "
+	"text here\">"
+	"<label>WiFi SSID</label>"
+	"<input type=\"text\" name=\"n\" required placeholder=\"Your WiFi network "
+	"name\">"
+	"<label>WiFi Password</label>"
+	"<input type=\"password\" name=\"p\" placeholder=\"Your WiFi password\">"
+	"<input type=\"submit\" value=\"Connect &amp; Register\">"
+	"</form>"
+	"</body></html>";
+
+/* GET / — serve the HTML setup page */
 esp_err_t root_get_handler(httpd_req_t *req) {
 	httpd_resp_set_type(req, "text/html");
+	httpd_resp_send_chunk(req, root_html, sizeof(root_html) - 1);
+	httpd_resp_send_chunk(req, NULL, 0);
+	return ESP_OK;
+}
 
-	const char *html =
-		"<!DOCTYPE html><html><head></head><body><h2>ESP32 "
-		"WIFI</h2><form><label for=\"n\">Wifi SSID:</label><br><input "
-		"type=\"text\"id=\"n\" name=\"n\"><br><br><label for=\"p\">WIFI "
-		"Password:</label><br><input type=\"text\" id=\"p\" "
-		"name=\"p\"><br><br><input type=\"submit\" "
-		"value=\"Submit\"></form></body></html>";
-	httpd_resp_send(req, html, 285); //-1 for undetermined
-	if (req->uri[1] == '\0')
-		return ESP_OK;
-
-	puts(req->uri);
-
-	char *temp = req->uri + 4, *temp2 = wifi_name.data;
-	// printf("HUJJJJ %c %p\n",*temp,temp);
-	wifi_name.size = 0;
-	while (*temp && (*temp != '&') && (wifi_name.size != 32)) {
-		switch (*temp) {
-		case '+':
-			temp++;
-			*temp2++ = ' ';
-			break;
-		case '%':
-			*temp2++ = (cast_hex(temp[1]) << 4) | cast_hex(temp[2]);
-			// printf("%hhx %hhx %hhx\n", *temp2++, ((temp[1] - '0') << 4),
-			// (temp[2] - '0'));
-			temp += 3;
-			break;
-		default:
-			*temp2++ = *temp++;
-			break;
-		}
-		wifi_name.size++;
+/* POST / — receive WiFi credentials + claim token + backend URL */
+static esp_err_t root_post_handler(httpd_req_t *req) {
+	int total_len = req->content_len;
+	if (total_len <= 0 || total_len > 512) {
+		httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Bad content length");
+		return ESP_FAIL;
 	}
-	if (!wifi_name.size)
-		return ESP_LOG_ERROR;
-	wifi_name.data[wifi_name.size] = 0;
-	wifi_password.size = 0;
-	temp += 3;
-	temp2 = wifi_password.data;
-	while (*temp && (*temp != '&') && (wifi_password.size != 64)) {
-		switch (*temp) {
-		case '+':
-			temp++;
-			*temp2++ = ' ';
-			break;
-		case '%':
-			*temp2++ = (cast_hex(temp[1]) << 4) | cast_hex(temp[2]);
-			temp += 3;
-			break;
-		default:
-			*temp2++ = *temp++;
-			break;
-		}
-		wifi_password.size++;
+	char *body = malloc(total_len + 1);
+	if (!body) {
+		httpd_resp_send_err(req, HTTPD_500_INTERNAL_SERVER_ERROR, "OOM");
+		return ESP_FAIL;
 	}
-	if (!wifi_password.size)
-		return ESP_LOG_ERROR;
-	wifi_password.data[wifi_password.size] = 0;
+	int received = 0;
+	while (received < total_len) {
+		int r = httpd_req_recv(req, body + received, total_len - received);
+		if (r <= 0) {
+			free(body);
+			return ESP_FAIL;
+		}
+		received += r;
+	}
+	body[total_len] = '\0';
 
-	printf("\nGOT SSID %u %.*s password %u %.*s\n", wifi_name.size,
-		   wifi_name.size, wifi_name.data, wifi_password.size,
-		   wifi_password.size, wifi_password.data);
-	// httpd_ssl_stop(req->handle);
+	wifi_name.size = extract_field(body, "n", wifi_name.data, 32);
+	wifi_password.size = extract_field(body, "p", wifi_password.data, 64);
+
+	/* Decode the base64 QR payload and extract claim token + backend URL */
+	char q_b64[400] = {0};
+	int q_len = extract_field(body, "q", q_b64, sizeof(q_b64) - 1);
+	free(body);
+
+	if (!wifi_name.size) {
+		httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Missing WiFi SSID");
+		return ESP_FAIL;
+	}
+	if (q_len > 0) {
+		unsigned char decoded[300] = {0};
+		size_t out_len = 0;
+		int ret =
+			mbedtls_base64_decode(decoded, sizeof(decoded) - 1, &out_len,
+								  (const unsigned char *)q_b64, (size_t)q_len);
+		if (ret == 0 && out_len > 0) {
+			decoded[out_len] = '\0';
+			claim_token.size =
+				json_get_string((char *)decoded, "t", claim_token.data, 64);
+			backend_url.size =
+				json_get_string((char *)decoded, "u", backend_url.data, 128);
+		} else {
+			printf("base64 decode failed: %d\n", ret);
+		}
+	}
+
+	printf("Provisioned: ssid=%.*s token_len=%u url_len=%u\n",
+		   (int)wifi_name.size, wifi_name.data, (unsigned)claim_token.size,
+		   (unsigned)backend_url.size);
+
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_sendstr(
+		req, "<html><body><h2>Saved! Rebooting...</h2></body></html>");
 	has_wifi = 1;
 	return ESP_OK;
 }
+
+static const httpd_uri_t root = {
+	.uri = "/", .method = HTTP_GET, .handler = root_get_handler};
+
+static const httpd_uri_t root_post = {
+	.uri = "/",
+	.method = HTTP_POST,
+	.handler = root_post_handler,
+};
 
 #if CONFIG_EXAMPLE_ENABLE_HTTPS_USER_CALLBACK
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
@@ -224,9 +316,6 @@ https_server_user_callback(esp_https_server_user_cb_arg_t *user_cb) {
 }
 #endif
 
-const httpd_uri_t root = {
-	.uri = "/", .method = HTTP_GET, .handler = root_get_handler};
-
 httpd_handle_t start_webserver(void) {
 	httpd_handle_t server = NULL;
 
@@ -235,9 +324,6 @@ httpd_handle_t start_webserver(void) {
 	esp_err_t ret;
 	httpd_ssl_config_t conf = HTTPD_SSL_CONFIG_DEFAULT();
 
-	// printf("%u %u %u %u %u\n",conf.max_uri_len
-	// ,conf.max_resp_headers,conf.max_open_sockets
-	// ,conf.stack_size,conf.max_header_len);
 	extern const unsigned char servercert_start[] asm(
 		"_binary_servercert_pem_start");
 	extern const unsigned char servercert_end[] asm(
@@ -256,8 +342,6 @@ httpd_handle_t start_webserver(void) {
 #endif
 
 	ret = httpd_ssl_start(&server, &conf);
-	// httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-	// ret=httpd_start(&server, &config);
 
 	if (ESP_OK != ret) {
 		ESP_LOGI("httpd_ssl_start", "Error starting server!");
@@ -267,6 +351,7 @@ httpd_handle_t start_webserver(void) {
 	// Set URI handlers
 	ESP_LOGI("httpd_ssl_start", "Registering URI handlers");
 	httpd_register_uri_handler(server, &root);
+	httpd_register_uri_handler(server, &root_post);
 	return server;
 }
 
@@ -284,7 +369,6 @@ void disconnect_handler(void *arg, esp_event_base_t event_base,
 			ESP_LOGE("disconnect_handler", "Failed to stop https server");
 		}
 	}
-	// puts("disconnect_handler");
 }
 
 void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
@@ -293,5 +377,4 @@ void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
 	if (*SERVER == NULL) {
 		*SERVER = start_webserver();
 	}
-	// puts("connect_handler");
 }

@@ -24,6 +24,8 @@ size_t cast_hex(size_t t);
 void connect_handler(void *arg, esp_event_base_t event_base, int32_t event_id,
 					 void *event_data);
 extern vstr wifi_name, wifi_password;
+extern vstr claim_token;
+extern vstr backend_url;
 extern int has_wifi;
 esp_err_t stop_webserver(httpd_handle_t server);
 extern httpd_handle_t *SERVER;

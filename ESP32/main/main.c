@@ -1,3 +1,4 @@
+#include "esp_http_client.h"
 #include "includes.h"
 #include "soft_ap_sub.h"
 #include "station_wifi.h"
@@ -52,6 +53,70 @@ static void init_threads(void) {
 	pthread_attr_setstacksize(&attr_detached, 16384);
 }
 
+static void register_device_with_backend(void) {
+	if (claim_token.size == 0 || backend_url.size == 0) {
+		puts("No claim token, skipping registration");
+		return;
+	}
+
+	uint8_t mac[6];
+	esp_wifi_get_mac(WIFI_IF_STA, mac);
+	char device_id[18];
+	snprintf(device_id, sizeof(device_id), "%02X:%02X:%02X:%02X:%02X:%02X",
+			 mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+
+	char body[220];
+	int body_len = snprintf(body, sizeof(body),
+							"{\"device_id\":\"%s\",\"claim_token\":\"%.*s\"}",
+							device_id, (int)claim_token.size, claim_token.data);
+
+	char url[220];
+	snprintf(url, sizeof(url), "%.*s/api/iot/register", (int)backend_url.size,
+			 backend_url.data);
+
+	printf("Registering device %s with %s\n", device_id, url);
+
+	esp_http_client_config_t config = {
+		.url = url,
+		.method = HTTP_METHOD_POST,
+		.skip_cert_common_name_check = true,
+	};
+	esp_http_client_handle_t client = esp_http_client_init(&config);
+	if (!client) {
+		puts("http_client_init failed");
+		return;
+	}
+
+	esp_http_client_set_header(client, "Content-Type", "application/json");
+	esp_http_client_set_post_field(client, body, body_len);
+
+	esp_err_t err = esp_http_client_perform(client);
+	if (err == ESP_OK) {
+		int status = esp_http_client_get_status_code(client);
+		printf("Registration response: %d\n", status);
+		if (status == 200) {
+			puts("Registration successful, clearing claim token");
+			claim_token.size = 0;
+			backend_url.size = 0;
+			// Rewrite SPIFFS without the token
+			FILE *wf = fopen("/spiffs/wf", "wb");
+			if (wf) {
+				uint8_t zero = 0;
+				fwrite(&wifi_name.size, 1, 1, wf);
+				fwrite(&wifi_password.size, 1, 1, wf);
+				fwrite(&zero, 1, 1, wf); // token_len = 0
+				fwrite(&zero, 1, 1, wf); // url_len = 0
+				fwrite(wifi_name.data, wifi_name.size, 1, wf);
+				fwrite(wifi_password.data, wifi_password.size, 1, wf);
+				fclose(wf);
+			}
+		}
+	} else {
+		printf("Registration failed: %s\n", esp_err_to_name(err));
+	}
+	esp_http_client_cleanup(client);
+}
+
 static void setup_wifi(void) {
 	FILE *wififile = fopen("/spiffs/wf", "rb");
 	wifi_name.data = (char *)malloc(98 * UTF8_MAX_SIZE);
@@ -61,19 +126,45 @@ static void setup_wifi(void) {
 	wifi_name.size = 0;
 	wifi_password.size = 0;
 
+	claim_token.data = malloc(65);
+	claim_token.size = 0;
+	backend_url.data = malloc(129);
+	backend_url.size = 0;
+
 	int wifi_getter = 1;
 
 	// the esp32 has wifi credential to connect to the internet
 	if (wififile) {
 		puts("Found cache file");
+		uint8_t token_len = 0, url_len = 0;
 		fread(&wifi_name.size, 1, 1, wififile);
 		fread(&wifi_password.size, 1, 1, wififile);
-		fread(wifi_name.data, wifi_name.size, 1, wififile);
-		fread(wifi_password.data, wifi_password.size, 1, wififile);
+		// Try to read token_len and url_len (new format); old files won't have
+		// them
+		if (fread(&token_len, 1, 1, wififile) == 1 &&
+			fread(&url_len, 1, 1, wififile) == 1) {
+			fread(wifi_name.data, wifi_name.size, 1, wififile);
+			fread(wifi_password.data, wifi_password.size, 1, wififile);
+			if (token_len > 0 && token_len <= 64) {
+				fread(claim_token.data, token_len, 1, wififile);
+				claim_token.size = token_len;
+			}
+			if (url_len > 0 && url_len <= 128) {
+				fread(backend_url.data, url_len, 1, wififile);
+				backend_url.size = url_len;
+			}
+		} else {
+			// Old format: rewind and read without length bytes
+			fseek(wififile, 2, SEEK_SET);
+			fread(wifi_name.data, wifi_name.size, 1, wififile);
+			fread(wifi_password.data, wifi_password.size, 1, wififile);
+		}
 		fclose(wififile);
 
 		wifi_name.data[wifi_name.size] = 0;
 		wifi_password.data[wifi_password.size] = 0;
+		if (claim_token.size < 65) claim_token.data[claim_token.size] = 0;
+		if (backend_url.size < 129) backend_url.data[backend_url.size] = 0;
 
 		wifi_getter = wifi_init_sta(&wifi_name, &wifi_password);
 		if (wifi_getter) {
@@ -120,8 +211,14 @@ static void setup_wifi(void) {
 			esp_wifi_set_ps(WIFI_PS_NONE);
 			fwrite(&wifi_name.size, 1, 1, wififile);
 			fwrite(&wifi_password.size, 1, 1, wififile);
+			fwrite(&claim_token.size, 1, 1, wififile);
+			fwrite(&backend_url.size, 1, 1, wififile);
 			fwrite(wifi_name.data, wifi_name.size, 1, wififile);
 			fwrite(wifi_password.data, wifi_password.size, 1, wififile);
+			if (claim_token.size > 0)
+				fwrite(claim_token.data, claim_token.size, 1, wififile);
+			if (backend_url.size > 0)
+				fwrite(backend_url.data, backend_url.size, 1, wififile);
 			fclose(wififile);
 			puts("Saved to temp file");
 		}
@@ -383,6 +480,9 @@ void app_main(void) {
 	init_threads();
 	init_leds();
 	setup_wifi();
+	if (claim_token.size > 0) {
+		register_device_with_backend();
+	}
 	prepare_runtime();
 
 	xTaskCreate(reset_button_task, "reset_button_task", 4096, NULL, 5, NULL);
