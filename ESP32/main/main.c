@@ -254,7 +254,7 @@ void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 	switch (*receive_buff) {
 	case 'P':
 		// just to keep alive the connection
-		puts("Pong");
+		// puts("Pong");
 		break;
 	case 'I':
 		// puts("0");
@@ -401,14 +401,19 @@ void app_main(void) {
 	esp_task_wdt_delete(NULL);
 
 	while (1) {
-		printf("in while block\n");
 		int ret2 = capture_frame(tls);
 
 		if (ret2 < 0) return;
 
-		if (sync_and_handle_command(tls, receive_buff) < 0) return;
-		if (send_frame_len(tls) < 0) return;
-		if (send_frame_buf(tls) < 0) return;
+		if (sync_and_handle_command(tls, receive_buff) < 0) {
+			// return;
+		}
+		if (send_frame_len(tls) < 0) {
+			// return;
+		}
+		if (send_frame_buf(tls) < 0) {
+			// return;
+		}
 		release_frame();
 	}
 }
