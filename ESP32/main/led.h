@@ -1,5 +1,3 @@
-#pragma once
-
 #ifndef _H_LED_
 #define _H_LED_ 1
 void blink_led(void);
