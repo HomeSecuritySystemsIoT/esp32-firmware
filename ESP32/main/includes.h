@@ -16,8 +16,6 @@
 #include <string.h>
 // #include <sys/_pthreadtypes.h>
 #include "camera.h"
-#include "esp_https_server.h"
-#include "esp_spiffs.h"
 #include "jpeg.h"
 #include "led.h"
 #include "station_wifi.h"
@@ -25,9 +23,11 @@
 #define UTF8_MAX_SIZE 4
 #include "esp_camera.h"
 #include "esp_event.h"
+#include "esp_https_server.h"
 #include "esp_log.h"
 #include "esp_mac.h"
 #include "esp_sntp.h"
+#include "esp_spiffs.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

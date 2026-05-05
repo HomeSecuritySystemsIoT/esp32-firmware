@@ -2,6 +2,8 @@
 #include "soft_ap_sub.h"
 #include "station_wifi.h"
 #include "tls.h"
+#include "utilities/factory_reset.h"
+#include <stdio.h>
 
 // server information for tcp/tls connection
 #define SERVER_IP "51.210.107.234"
@@ -381,8 +383,9 @@ void app_main(void) {
 	init_threads();
 	init_leds();
 	setup_wifi();
-
 	prepare_runtime();
+
+	xTaskCreate(reset_button_task, "reset_button_task", 4096, NULL, 5, NULL);
 
 	char receive_buff[1025];
 	receive_buff[1024] = 0;
@@ -398,6 +401,7 @@ void app_main(void) {
 	esp_task_wdt_delete(NULL);
 
 	while (1) {
+		printf("in while block\n");
 		int ret2 = capture_frame(tls);
 
 		if (ret2 < 0) return;

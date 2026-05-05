@@ -1,18 +1,10 @@
 #include "camera.h"
-#include "sensor.h"
-#include <string.h>
-#define UTF8_MAX_SIZE 4
 #include "esp_camera.h"
-#include "esp_event.h"
-#include "esp_log.h"
-#include "esp_mac.h"
-#include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "lwip/err.h"
-#include "lwip/sockets.h"
-#include "lwip/sys.h"
-#include "nvs_flash.h"
+#include "sensor.h"
+
+#define UTF8_MAX_SIZE 4
 #define CAM_PIN_PWDN -1	 // Lub konkretny GPIO, np. 38
 #define CAM_PIN_RESET -1 // Lub konkretny GPIO, np. 39
 #define CAM_PIN_XCLK 15
