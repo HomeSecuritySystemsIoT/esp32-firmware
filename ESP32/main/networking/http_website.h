@@ -5,13 +5,8 @@
  *      Author: Dawid
  */
 
-#ifndef MAIN_HTTP_WEBSITE_H_
-#define MAIN_HTTP_WEBSITE_H_
-#include "esp_eth.h"
-#include "esp_netif.h"
-#include "esp_tls.h"
-#include "protocol_examples_common.h"
-#include "sdkconfig.h"
+#ifndef NETWORKING_HTTP_WEBSITE_H_
+#define NETWORKING_HTTP_WEBSITE_H_
 #include "str_utility.h"
 #include <esp_event.h>
 #include <esp_https_server.h>
@@ -29,4 +24,4 @@ extern vstr backend_url;
 extern int has_wifi;
 esp_err_t stop_webserver(httpd_handle_t server);
 extern httpd_handle_t *SERVER;
-#endif /* MAIN_HTTP_WEBSITE_H_ */
+#endif /* NETWORKING_HTTP_WEBSITE_H_ */

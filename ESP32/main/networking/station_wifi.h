@@ -1,5 +1,5 @@
-#ifndef _H_STATION_WIFI_
-#define _H_STATION_WIFI_
+#ifndef NETWORKING_STATION_WIFI_H_
+#define NETWORKING_STATION_WIFI_H_
 #include "str_utility.h"
 void wifi_destroy();
 extern int connected_to_wifi;

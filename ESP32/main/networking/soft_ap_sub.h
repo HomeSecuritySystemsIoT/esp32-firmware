@@ -5,9 +5,9 @@
  *      Author: Dawid
  */
 
-#ifndef MAIN_SOFT_AP_SUB_H_
-#define MAIN_SOFT_AP_SUB_H_
+#ifndef NETWORKING_SOFT_AP_SUB_H_
+#define NETWORKING_SOFT_AP_SUB_H_
 
 void wifi_init_softap();
 
-#endif /* MAIN_SOFT_AP_SUB_H_ */
+#endif /* NETWORKING_SOFT_AP_SUB_H_ */

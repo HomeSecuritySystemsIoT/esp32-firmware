@@ -7,11 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include "esp_eth.h"
-#include "esp_netif.h"
 #include "mbedtls/base64.h"
-#include "protocol_examples_common.h"
-#include "sdkconfig.h"
 #include <esp_event.h>
 #include <esp_https_server.h>
 #include <esp_log.h>
