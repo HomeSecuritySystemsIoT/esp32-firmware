@@ -62,3 +62,7 @@ void reset_button_task(void *arg) {
 		vTaskDelay(pdMS_TO_TICKS(50));
 	}
 }
+
+void setup_factory_reset() {
+	xTaskCreate(reset_button_task, "reset_button_task", 4096, NULL, 5, NULL);
+}
