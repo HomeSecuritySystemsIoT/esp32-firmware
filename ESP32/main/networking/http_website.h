@@ -12,7 +12,7 @@
 #include "esp_tls.h"
 #include "protocol_examples_common.h"
 #include "sdkconfig.h"
-#include "str.h"
+#include "str_utility.h"
 #include <esp_event.h>
 #include <esp_https_server.h>
 #include <esp_log.h>

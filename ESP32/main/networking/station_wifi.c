@@ -18,7 +18,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "nvs_flash.h"
-#include "str.h"
+#include "str_utility.h"
 #include "wifi_common.h"
 #include <string.h>
 /* The examples use WiFi configuration that you can set via project
@@ -101,8 +101,7 @@ static void station_event_handler(void *arg, esp_event_base_t event_base,
 								  int32_t event_id, void *event_data) {
 	int e = event_id;
 	printf("EVENT RECEIVED: %i\n", e);
-	if (force_stop)
-		return;
+	if (force_stop) return;
 
 	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
 		esp_wifi_connect();
@@ -152,8 +151,7 @@ int wifi_init_sta(vstr *name, vstr *password) {
 		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 		// esp_wifi_set_storage(WIFI_STORAGE_RAM);
 		wifi_netif = esp_netif_create_default_wifi_sta();
-		if (!wifi_netif)
-			exit(800);
+		if (!wifi_netif) exit(800);
 		wifi_mode = 2;
 		break;
 	case 1:
@@ -162,8 +160,7 @@ int wifi_init_sta(vstr *name, vstr *password) {
 		esp_netif_destroy(wifi_netif);
 		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 		wifi_netif = esp_netif_create_default_wifi_sta();
-		if (!wifi_netif)
-			exit(800);
+		if (!wifi_netif) exit(800);
 		wifi_mode = 2;
 		break;
 	}
@@ -195,7 +192,7 @@ int wifi_init_sta(vstr *name, vstr *password) {
 					WIFI_AUTH_WPA2_PSK, // Ustaw konkretnie
 										//.sae_pwe_h2e = ESP_WIFI_SAE_MODE,
 										//.sae_h2e_identifier =
-										//EXAMPLE_H2E_IDENTIFIER,
+										// EXAMPLE_H2E_IDENTIFIER,
 				.scan_method = WIFI_ALL_CHANNEL_SCAN,
 				.failure_retry_cnt = 0,
 				.pmf_cfg = {.capable = true, .required = false},

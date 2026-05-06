@@ -1,12 +1,5 @@
-/*
- * str.h
- *
- *  Created on: 1 kwi 2026
- *      Author: Dawid
- */
-
-#ifndef MAIN_STR_H_
-#define MAIN_STR_H_
+#ifndef NETWORKING_STR_UTILITY
+#define NETWORKING_STR_UTILITY
 #include <stddef.h>
 struct vstr_t {
 	char *data;
@@ -18,5 +11,4 @@ struct qvstr_t {
 	size_t size;
 	char data[];
 };
-
-#endif /* MAIN_STR_H_ */
+#endif

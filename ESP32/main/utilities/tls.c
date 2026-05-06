@@ -1,6 +1,7 @@
 #include "esp_log.h"
 #include "esp_tls.h"
-#include "string.h"
+#include <string.h>
+
 // Odwołania do osadzonych plików
 extern const uint8_t ca_cert_start[] asm("_binary_ca_cert_crt_start");
 extern const uint8_t ca_cert_end[] asm("_binary_ca_cert_crt_end");

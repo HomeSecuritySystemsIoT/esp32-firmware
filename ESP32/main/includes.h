@@ -17,9 +17,8 @@
 // #include <sys/_pthreadtypes.h>
 #include "camera.h"
 #include "jpeg.h"
-#include "station_wifi.h"
+#include "networking/wifi_common.h"
 #include "utilities/led.h"
-#include "wifi_common.h"
 #define UTF8_MAX_SIZE 4
 #include "esp_camera.h"
 #include "esp_event.h"
@@ -31,10 +30,10 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "http_website.h"
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
+#include "networking/http_website.h"
 #include "nvs_flash.h"
 #include <pthread.h>
 #include <sys/socket.h>

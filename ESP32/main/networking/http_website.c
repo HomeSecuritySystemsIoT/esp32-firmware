@@ -23,6 +23,9 @@
 #include <string.h>
 #include <sys/param.h>
 
+#include "http_website.h"
+#include "str_utility.h"
+
 size_t cast_hex(size_t t) {
 	if (t >= '0' && t <= '9') {
 		return t - '0';
@@ -37,8 +40,6 @@ size_t cast_hex(size_t t) {
 	return 0;
 }
 
-#include "http_website.h"
-#include "str.h"
 httpd_handle_t *SERVER;
 vstr wifi_name, wifi_password;
 vstr claim_token, backend_url;
