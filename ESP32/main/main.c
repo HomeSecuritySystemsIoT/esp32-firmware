@@ -4,6 +4,7 @@
 #include "soft_ap_sub.h"
 #include "station_wifi.h"
 #include "tls.h"
+#include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include <stdio.h>
 
@@ -179,6 +180,7 @@ static void setup_wifi(void) {
 	// the esp32 waits for connection to receive wifi credentials
 	while (wifi_getter) {
 		has_wifi = 0;
+		start_dns_hijack();
 		wifi_init_softap();
 
 		ESP_ERROR_CHECK(esp_event_handler_register(
@@ -385,6 +387,7 @@ void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 		break;
 
 	default:
+		printf("Unknown command: %c\n", *receive_buff);
 		puts("Unknown command");
 		break;
 	}
@@ -460,6 +463,8 @@ static void release_frame(void) { esp_camera_fb_return(fb); }
 
 void app_main(void) {
 	init_system_and_storage();
+	setup_factory_reset();
+
 	init_threads();
 	init_leds();
 	setup_wifi();
@@ -468,8 +473,6 @@ void app_main(void) {
 	}
 	free(wifi_name.data);
 	prepare_runtime();
-
-	xTaskCreate(reset_button_task, "reset_button_task", 4096, NULL, 5, NULL);
 
 	char receive_buff[1025];
 	receive_buff[1024] = 0;

@@ -232,29 +232,42 @@ static const httpd_uri_t root_post = {
 	.handler = root_post_handler,
 };
 
+// For iOS probes — must return this exact content
+static esp_err_t ios_probe_handler(httpd_req_t *req) {
+	httpd_resp_set_type(req, "text/html");
+	httpd_resp_sendstr(req, "<HTML><HEAD><TITLE>Success</TITLE></HEAD>"
+							"<BODY>Success</BODY></HTML>");
+	return ESP_OK;
+}
+
+// For Android probes — redirect to your setup page
+static esp_err_t android_probe_handler(httpd_req_t *req) {
+	httpd_resp_set_status(req, "302 Found");
+	httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+	httpd_resp_send(req, NULL, 0);
+	return ESP_OK;
+}
+
 // special urls for captive portals
 static const httpd_uri_t android_captive_1 = {
 	.uri = "/gen_204",
 	.method = HTTP_GET,
-	.handler = website_handler,
+	.handler = android_probe_handler,
 };
-
 static const httpd_uri_t android_captive_2 = {
 	.uri = "/generate_204",
 	.method = HTTP_GET,
-	.handler = website_handler,
+	.handler = android_probe_handler,
 };
-
 static const httpd_uri_t ios_captive_1 = {
 	.uri = "/library/test/success.html",
 	.method = HTTP_GET,
-	.handler = website_handler,
+	.handler = ios_probe_handler,
 };
-
 static const httpd_uri_t ios_captive_2 = {
 	.uri = "/hotspot-detect.html",
 	.method = HTTP_GET,
-	.handler = website_handler,
+	.handler = ios_probe_handler,
 };
 
 static const httpd_uri_t *uri_handlers[] = {
