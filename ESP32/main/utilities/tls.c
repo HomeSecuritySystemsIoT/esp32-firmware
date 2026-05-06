@@ -1,6 +1,13 @@
+#include "utilities/tls.h"
 #include "esp_log.h"
 #include "esp_tls.h"
+#include "lwip/sockets.h"
+#include <stdio.h>
 #include <string.h>
+
+#define SERVER_IP "51.210.107.234"
+#define SERVER_IP_LENGTH 14
+#define SERVER_PORT 7893
 
 // Odwołania do osadzonych plików
 extern const uint8_t ca_cert_start[] asm("_binary_ca_cert_crt_start");
@@ -49,4 +56,27 @@ struct esp_tls *tls_connect(const char *hostname, int hostname_len, int port,
 	}
 
 	return tls;
+}
+
+struct esp_tls *connect_tls_server(void) {
+	esp_tls_cfg_t tls_cfg = get_tls_cfg();
+	struct esp_tls *tls =
+		tls_connect(SERVER_IP, SERVER_IP_LENGTH, SERVER_PORT, &tls_cfg);
+	if (!tls) {
+		puts("tls=NULL");
+		return NULL;
+	}
+	return tls;
+}
+
+void configure_tls_socket(struct esp_tls *tls, int *client_fd_tcp) {
+	if (esp_tls_get_conn_sockfd(tls, client_fd_tcp) == ESP_OK) {
+		int enable = 1;
+		if (setsockopt(*client_fd_tcp, IPPROTO_TCP, TCP_NODELAY, &enable,
+					   sizeof(enable)) == 0) {
+			printf("TCP_NODELAY enabled\n");
+		} else {
+			printf("Failed to set TCP_NODELAY\n");
+		}
+	}
 }
