@@ -7,13 +7,9 @@
 
 #ifndef MAIN_INCLUDES_H_
 #define MAIN_INCLUDES_H_
+
 #define PTRSIZE sizeof(void *)
 #define UTF8_MAX_SIZE 4
-
-#include <pthread.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-
 #define EXAMPLE_ESP_WIFI_SSID CONFIG_ESP_WIFI_SSID
 #define EXAMPLE_ESP_WIFI_PASS CONFIG_ESP_WIFI_PASSWORD
 #define EXAMPLE_ESP_WIFI_CHANNEL CONFIG_ESP_WIFI_CHANNEL

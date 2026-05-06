@@ -10,16 +10,12 @@
 #define CONFIG_ESP_WIFI_AUTH_WPA2_PSK 1
 #include "esp_event.h"
 #include "esp_log.h"
-#include "esp_system.h"
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
-#include "lwip/err.h"
-#include "lwip/sys.h"
-#include "nvs_flash.h"
+#include "soft_ap_sub.h"
 #include "str_utility.h"
-#include "wifi_common.h"
 #include <string.h>
 /* The examples use WiFi configuration that you can set via project
    configuration menu

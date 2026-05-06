@@ -4,10 +4,17 @@
  *  Created on: 1 maj 2026
  *      Author: Dawid
  */
+#include <string.h>
+
+#include "includes.h"
+
 #include "esp_log.h"
 #include "esp_mac.h"
-#include "includes.h"
-#include "wifi_common.h"
+#include "esp_wifi.h"
+
+int wifi_mode = 0;
+esp_netif_t *wifi_netif = NULL;
+
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
 							   int32_t event_id, void *event_data) {
 	if (event_id == WIFI_EVENT_AP_STACONNECTED) {

@@ -1,19 +1,21 @@
-#include "includes.h"
+#include <pthread.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+
+#include "includes.h"
 
 #include "networking/http_website.h"
 #include "networking/soft_ap_sub.h"
 #include "networking/station_wifi.h"
-#include "networking/wifi_common.h"
 
 #include "peripherals/camera.h"
 #include "peripherals/led.h"
 
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
-#include "utilities/tls.h"
-
 #include "utilities/jpeg.h"
+#include "utilities/tls.h"
 
 #include "esp_crt_bundle.h"
 #include "esp_http_client.h"

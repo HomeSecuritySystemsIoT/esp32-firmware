@@ -8,6 +8,8 @@
 #ifndef NETWORKING_SOFT_AP_SUB_H_
 #define NETWORKING_SOFT_AP_SUB_H_
 
+#include "esp_wifi.h"
+extern esp_netif_t *wifi_netif;
 void wifi_init_softap();
 
 #endif /* NETWORKING_SOFT_AP_SUB_H_ */
