@@ -180,8 +180,8 @@ static void setup_wifi(void) {
 	// the esp32 waits for connection to receive wifi credentials
 	while (wifi_getter) {
 		has_wifi = 0;
-		start_dns_hijack();
 		wifi_init_softap();
+		start_dns_hijack();
 
 		ESP_ERROR_CHECK(esp_event_handler_register(
 			WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &connect_handler, &server));
@@ -468,9 +468,11 @@ void app_main(void) {
 	init_threads();
 	init_leds();
 	setup_wifi();
+
 	if (claim_token.size > 0) {
 		register_device_with_backend();
 	}
+
 	free(wifi_name.data);
 	prepare_runtime();
 

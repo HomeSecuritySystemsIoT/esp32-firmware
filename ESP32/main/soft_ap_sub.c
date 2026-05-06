@@ -31,8 +31,7 @@ void wifi_init_softap(void) {
 	case 0:
 		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 		wifi_netif = esp_netif_create_default_wifi_ap();
-		if (!wifi_netif)
-			exit(800);
+		if (!wifi_netif) exit(800);
 		wifi_mode = 1;
 		break;
 	case 2:
@@ -41,8 +40,7 @@ void wifi_init_softap(void) {
 		esp_netif_destroy(wifi_netif);
 		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 		wifi_netif = esp_netif_create_default_wifi_ap();
-		if (!wifi_netif)
-			exit(800);
+		if (!wifi_netif) exit(800);
 		wifi_mode = 1;
 		break;
 	}

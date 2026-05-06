@@ -1,3 +1,4 @@
+#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lwip/sockets.h"
@@ -57,5 +58,7 @@ static void dns_hijack_task(void *pvParameters) {
 }
 
 void start_dns_hijack(void) {
+	printf("\n\n\n\n\nstart dns hijack??\n\n\n\n");
+	ESP_LOGI("dns_hijack", "start dns hijack task");
 	xTaskCreate(dns_hijack_task, "dns_hijack", 4096, NULL, 5, NULL);
 }
