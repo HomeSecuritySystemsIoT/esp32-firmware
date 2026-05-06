@@ -362,27 +362,6 @@ static struct esp_tls *startup_phase(char *receive_buff, int *client_fd_tcp) {
 
 void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 	switch (*receive_buff) {
-	case 'P':
-		// just to keep alive the connection
-		// puts("Pong");
-		break;
-	case 'I':
-		// puts("0");
-		break;
-	case 'G':
-		// puts("th0 attempts to unlock mutex");
-		// if(th1_command==0)
-		//	pthread_mutex_unlock(&snapshot_muted);
-		// puts("th0 unlocked mutex");
-		break;
-	case 'M':
-		// turns on motion detection
-		puts("Motion detection turned on");
-		break;
-	case 'N':
-		// turns off motion detection
-		puts("Motion detection turned off");
-		break;
 	case 'S':
 		// turns off camera feed
 		puts("Camera feed turned off");
@@ -400,15 +379,6 @@ void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 				wait = 0;
 				puts("Camera feed turned on");
 				// init_camera();
-				break;
-			case 'M':
-				// turns on motion detection
-				puts("Motion detection turned on");
-				// th1_command=0;
-				break;
-			case 'N':
-				puts("Motion detection turned off");
-				// turns off motion detection
 				break;
 			}
 		}
