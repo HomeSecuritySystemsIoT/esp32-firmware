@@ -1,4 +1,3 @@
-#include <pthread.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -15,35 +14,18 @@
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include "utilities/jpeg.h"
+#include "utilities/runtime.h"
 #include "utilities/storage.h"
 #include "utilities/tls.h"
 
 #include "esp_crt_bundle.h"
 #include "esp_http_client.h"
-#include "esp_pthread.h"
-#include "esp_sntp.h"
-#include "esp_spiffs.h"
 #include "esp_task_wdt.h"
 
 // server information for tcp/tls connection
 #define SERVER_IP "51.210.107.234"
 #define SERVER_IP_LENGTH 14
 #define SERVER_PORT 7893
-
-static void init_threads(void) {
-	esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
-	cfg.stack_size = 16384;
-	cfg.prio = 5;
-	cfg.inherit_cfg = false;
-	esp_pthread_set_cfg(&cfg);
-
-	// pthread_t th1;
-	pthread_attr_t attr_detached;
-	pthread_attr_init(&attr_detached);
-	pthread_attr_setdetachstate(&attr_detached, PTHREAD_CREATE_DETACHED);
-
-	pthread_attr_setstacksize(&attr_detached, 16384);
-}
 
 static void register_device_with_backend(void) {
 	if (claim_token.size == 0 || backend_url.size == 0) {
@@ -218,42 +200,6 @@ static void setup_wifi(void) {
 	}
 
 	set_led(0, 0, 0);
-}
-
-static void sincronize_time_sntp(void) {
-	esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	esp_sntp_setservername(0, "pool.ntp.org"); // Time server
-	esp_sntp_init();
-	time_t now;
-	struct tm timeinfo;
-	time(&now);
-	localtime_r(&now, &timeinfo);
-	while (timeinfo.tm_year < (2026 - 1900)) {
-		vTaskDelay(pdMS_TO_TICKS(500));
-		time(&now);
-		localtime_r(&now, &timeinfo);
-	}
-	puts("Year is 2026");
-}
-
-static void print_system_info(void) {
-
-	printf("Free SRAM: %zu bytes\n",
-		   heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
-
-	// Free PSRAM memory (external - here you have 8MB in N16R8)
-	printf("Free PSRAM: %zu bytes\n",
-		   heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
-
-	// Largest contiguous block (important if malloc returns NULL despite free
-	// memory)
-	printf("Largest SRAM block: %zu bytes\n",
-		   heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
-}
-
-static void prepare_runtime(void) {
-	sleep(10);
-	sincronize_time_sntp();
 }
 
 static struct esp_tls *connect_tls_server(void) {
