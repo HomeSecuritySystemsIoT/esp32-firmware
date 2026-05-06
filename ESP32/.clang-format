@@ -7,3 +7,4 @@ PackConstructorInitializers: NextLineOnly
 BreakConstructorInitializers: AfterColon
 IndentAccessModifiers: false
 AccessModifierOffset: -4
+AllowShortIfStatementsOnASingleLine: true

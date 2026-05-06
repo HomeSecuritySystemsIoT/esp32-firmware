@@ -1,3 +1,4 @@
 CompileFlags:
   CompilationDatabase: build
   Remove: [-m*, -f*]
+  Add: ["-D__GLIBC_USE(x)=0"]
