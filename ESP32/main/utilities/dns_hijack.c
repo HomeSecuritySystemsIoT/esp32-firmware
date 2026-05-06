@@ -2,16 +2,28 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lwip/sockets.h"
+#include <string.h>
 
 static void dns_hijack_task(void *pvParameters) {
 	int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (sock < 0) {
+		ESP_LOGE("dns_hijack", "socket() failed: %d", errno);
+		vTaskDelete(NULL);
+		return;
+	}
 
 	struct sockaddr_in server_addr = {
 		.sin_family = AF_INET,
 		.sin_port = htons(53),
 		.sin_addr.s_addr = htonl(INADDR_ANY),
 	};
-	bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	if (bind(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+		ESP_LOGE("dns_hijack", "bind() failed: %d", errno);
+		close(sock);
+		vTaskDelete(NULL);
+		return;
+	}
+	ESP_LOGI("dns_hijack", "listening on UDP port 53");
 
 	uint8_t buf[512];
 	struct sockaddr_in client_addr;
@@ -58,7 +70,9 @@ static void dns_hijack_task(void *pvParameters) {
 }
 
 void start_dns_hijack(void) {
-	printf("\n\n\n\n\nstart dns hijack??\n\n\n\n");
+	static int started = 0;
+	if (started) return;
+	started = 1;
 	ESP_LOGI("dns_hijack", "start dns hijack task");
 	xTaskCreate(dns_hijack_task, "dns_hijack", 4096, NULL, 5, NULL);
 }

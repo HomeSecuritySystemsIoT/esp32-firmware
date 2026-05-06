@@ -232,16 +232,20 @@ static const httpd_uri_t root_post = {
 	.handler = root_post_handler,
 };
 
-// For iOS probes — must return this exact content
-static esp_err_t ios_probe_handler(httpd_req_t *req) {
-	httpd_resp_set_type(req, "text/html");
-	httpd_resp_sendstr(req, "<HTML><HEAD><TITLE>Success</TITLE></HEAD>"
-							"<BODY>Success</BODY></HTML>");
+// Redirect all captive portal probes to the setup page.
+// iOS detects a captive portal when it does NOT get the expected "Success"
+// response from captive.apple.com — returning a redirect triggers the popup.
+static esp_err_t captive_redirect_handler(httpd_req_t *req) {
+	httpd_resp_set_status(req, "302 Found");
+	httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+	httpd_resp_send(req, NULL, 0);
 	return ESP_OK;
 }
 
-// For Android probes — redirect to your setup page
-static esp_err_t android_probe_handler(httpd_req_t *req) {
+// Catch-all: any unregistered path also redirects to the setup page so the
+// CNA browser always lands correctly regardless of which probe URL iOS uses.
+static esp_err_t http_404_redirect_handler(httpd_req_t *req,
+										   httpd_err_code_t err) {
 	httpd_resp_set_status(req, "302 Found");
 	httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
 	httpd_resp_send(req, NULL, 0);
@@ -252,22 +256,22 @@ static esp_err_t android_probe_handler(httpd_req_t *req) {
 static const httpd_uri_t android_captive_1 = {
 	.uri = "/gen_204",
 	.method = HTTP_GET,
-	.handler = android_probe_handler,
+	.handler = captive_redirect_handler,
 };
 static const httpd_uri_t android_captive_2 = {
 	.uri = "/generate_204",
 	.method = HTTP_GET,
-	.handler = android_probe_handler,
+	.handler = captive_redirect_handler,
 };
 static const httpd_uri_t ios_captive_1 = {
 	.uri = "/library/test/success.html",
 	.method = HTTP_GET,
-	.handler = ios_probe_handler,
+	.handler = captive_redirect_handler,
 };
 static const httpd_uri_t ios_captive_2 = {
 	.uri = "/hotspot-detect.html",
 	.method = HTTP_GET,
-	.handler = ios_probe_handler,
+	.handler = captive_redirect_handler,
 };
 
 static const httpd_uri_t *uri_handlers[] = {
@@ -297,6 +301,9 @@ httpd_handle_t start_webserver(void) {
 	for (int i = 0; i < URI_HANDLERS_COUNT; i++) {
 		httpd_register_uri_handler(server, uri_handlers[i]);
 	}
+
+	httpd_register_err_handler(server, HTTPD_404_NOT_FOUND,
+							   http_404_redirect_handler);
 
 	return server;
 }
