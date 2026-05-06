@@ -236,6 +236,7 @@ static const httpd_uri_t root_post = {
 // iOS detects a captive portal when it does NOT get the expected "Success"
 // response from captive.apple.com — returning a redirect triggers the popup.
 static esp_err_t captive_redirect_handler(httpd_req_t *req) {
+	ESP_LOGI("captive", "probe hit: %s", req->uri);
 	httpd_resp_set_status(req, "302 Found");
 	httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
 	httpd_resp_send(req, NULL, 0);
@@ -246,6 +247,7 @@ static esp_err_t captive_redirect_handler(httpd_req_t *req) {
 // CNA browser always lands correctly regardless of which probe URL iOS uses.
 static esp_err_t http_404_redirect_handler(httpd_req_t *req,
 										   httpd_err_code_t err) {
+	ESP_LOGI("captive", "404 catch-all: %s", req->uri);
 	httpd_resp_set_status(req, "302 Found");
 	httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
 	httpd_resp_send(req, NULL, 0);

@@ -34,6 +34,10 @@ static void dns_hijack_task(void *pvParameters) {
 						   (struct sockaddr *)&client_addr, &client_len);
 		if (len < 12) continue;
 
+		uint8_t *ip = (uint8_t *)&client_addr.sin_addr.s_addr;
+		ESP_LOGI("dns_hijack", "query from %d.%d.%d.%d len=%d", ip[0], ip[1],
+				 ip[2], ip[3], len);
+
 		// Build a DNS response pointing everything to 192.168.4.1
 		uint8_t resp[512];
 		memcpy(resp, buf, len);
@@ -62,8 +66,9 @@ static void dns_hijack_task(void *pvParameters) {
 		resp[resp_len++] = 4;
 		resp[resp_len++] = 1;
 
-		sendto(sock, resp, resp_len, 0, (struct sockaddr *)&client_addr,
-			   client_len);
+		int sent = sendto(sock, resp, resp_len, 0,
+						  (struct sockaddr *)&client_addr, client_len);
+		ESP_LOGI("dns_hijack", "response sent %d bytes", sent);
 	}
 	close(sock);
 	vTaskDelete(NULL);
