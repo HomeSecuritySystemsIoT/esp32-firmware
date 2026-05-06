@@ -15,6 +15,7 @@
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include "utilities/jpeg.h"
+#include "utilities/storage.h"
 #include "utilities/tls.h"
 
 #include "esp_crt_bundle.h"
@@ -28,33 +29,6 @@
 #define SERVER_IP "51.210.107.234"
 #define SERVER_IP_LENGTH 14
 #define SERVER_PORT 7893
-
-static void init_system_and_storage(void) {
-	// nvs_flash_erase();
-	esp_err_t ret = nvs_flash_init();
-	if (ret == ESP_ERR_NVS_NO_FREE_PAGES ||
-		ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-		ESP_ERROR_CHECK(nvs_flash_erase());
-		ret = nvs_flash_init();
-	}
-	ESP_ERROR_CHECK(ret);
-	ESP_ERROR_CHECK(esp_netif_init());
-	ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-	esp_netif_set_hostname(wifi_netif, "myesp32.xws");
-
-	esp_vfs_spiffs_conf_t conf = {.base_path = "/spiffs",
-								  .partition_label = NULL,
-								  .max_files = 1,
-								  .format_if_mount_failed = true};
-	ret = esp_vfs_spiffs_register(&conf);
-
-	if (ret != ESP_OK) {
-		printf("esp_vfs_spiffs_register(): %u\n", ret);
-	}
-
-	puts("esp_vfs_spiffs_register(): OK");
-}
 
 static void init_threads(void) {
 	esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
