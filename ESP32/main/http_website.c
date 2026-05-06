@@ -151,7 +151,7 @@ static const char root_html[] =
 	"</body></html>";
 
 /* GET / — serve the HTML setup page */
-esp_err_t root_get_handler(httpd_req_t *req) {
+esp_err_t website_handler(httpd_req_t *req) {
 	httpd_resp_set_type(req, "text/html");
 	httpd_resp_send_chunk(req, root_html, sizeof(root_html) - 1);
 	httpd_resp_send_chunk(req, NULL, 0);
@@ -222,13 +222,48 @@ static esp_err_t root_post_handler(httpd_req_t *req) {
 }
 
 static const httpd_uri_t root = {
-	.uri = "/", .method = HTTP_GET, .handler = root_get_handler};
+	.uri = "/",
+	.method = HTTP_GET,
+	.handler = website_handler,
+};
 
 static const httpd_uri_t root_post = {
 	.uri = "/",
 	.method = HTTP_POST,
 	.handler = root_post_handler,
 };
+
+// special urls for captive portals
+static const httpd_uri_t android_captive_1 = {
+	.uri = "/gen_204",
+	.method = HTTP_GET,
+	.handler = website_handler,
+};
+
+static const httpd_uri_t android_captive_2 = {
+	.uri = "/generate_204",
+	.method = HTTP_GET,
+	.handler = website_handler,
+};
+
+static const httpd_uri_t ios_captive_1 = {
+	.uri = "/library/test/success.html",
+	.method = HTTP_GET,
+	.handler = website_handler,
+};
+
+static const httpd_uri_t ios_captive_2 = {
+	.uri = "/hotspot-detect.html",
+	.method = HTTP_GET,
+	.handler = website_handler,
+};
+
+static const httpd_uri_t *uri_handlers[] = {
+	&root,			&root_post,		&android_captive_1, &android_captive_2,
+	&ios_captive_1, &ios_captive_2,
+};
+
+#define URI_HANDLERS_COUNT (sizeof(uri_handlers) / sizeof(uri_handlers[0]))
 
 #if CONFIG_EXAMPLE_ENABLE_HTTPS_USER_CALLBACK
 #ifdef CONFIG_ESP_TLS_USING_MBEDTLS
@@ -355,8 +390,10 @@ httpd_handle_t start_webserver(void) {
 
 	// Set URI handlers
 	ESP_LOGI("httpd_ssl_start", "Registering URI handlers");
-	httpd_register_uri_handler(server, &root);
-	httpd_register_uri_handler(server, &root_post);
+	for (int i = 0; i < URI_HANDLERS_COUNT; i++) {
+		httpd_register_uri_handler(server, uri_handlers[i]);
+	}
+
 	return server;
 }
 
