@@ -364,8 +364,11 @@ static struct esp_tls *startup_phase(char *receive_buff, int *client_fd_tcp) {
 
 void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 	switch (*receive_buff) {
+	case 'G':
+		break;
+	case 'M':
+		break;
 	case 'S':
-		// turns off camera feed
 		puts("Camera feed turned off");
 		// th1_command=1;
 		int wait = 1;
@@ -380,7 +383,6 @@ void handle_command(struct esp_tls *tls, camera_fb_t *fb, char *receive_buff) {
 			case 'G':
 				wait = 0;
 				puts("Camera feed turned on");
-				// init_camera();
 				break;
 			}
 		}
