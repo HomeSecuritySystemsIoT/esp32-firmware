@@ -15,10 +15,8 @@
 #define PTRSIZE sizeof(void *)
 #include <string.h>
 // #include <sys/_pthreadtypes.h>
-#include "camera.h"
 #include "jpeg.h"
 #include "networking/wifi_common.h"
-#include "utilities/led.h"
 #define UTF8_MAX_SIZE 4
 #include "esp_camera.h"
 #include "esp_event.h"

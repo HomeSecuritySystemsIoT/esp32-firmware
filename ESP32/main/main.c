@@ -3,6 +3,8 @@
 #include "includes.h"
 #include "networking/soft_ap_sub.h"
 #include "networking/station_wifi.h"
+#include "peripherals/camera.h"
+#include "peripherals/led.h"
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include "utilities/tls.h"
