@@ -8,6 +8,8 @@
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include "utilities/tls.h"
+
+#include "utilities/jpeg.h"
 #include <stdio.h>
 
 // server information for tcp/tls connection

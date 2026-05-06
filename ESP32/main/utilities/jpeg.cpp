@@ -1,4 +1,4 @@
-#include "JPEGDEC/JPEGDEC.h"
+#include "../JPEGDEC/JPEGDEC.h"
 #include "freertos/FreeRTOS.h"
 #include "lwip/sockets.h"
 #include <new>
@@ -10,13 +10,8 @@ int gs_select = 0, comp_init = 0;
 // #include "esp_dsp.h"
 
 extern "C" {
-#include "dsps_math.h"
-#include "dsps_sub.h"
-#include "esp_camera.h"
-#include "esp_event.h"
+#include "../peripherals/camera.h"
 #include "esp_heap_caps.h"
-#include "esp_log.h"
-#include "esp_mac.h"
 #include "jpeg.h"
 #include <stdlib.h>
 uint32_t calculate_total_diff(uint8_t *buf1, uint8_t *buf2, int len);
@@ -57,8 +52,7 @@ extern "C" int gray_scale(JPEGDRAW *pdraw) {
 void jpeg_init() {
 	void *jpeg_malloc =
 		(JPEGDEC *)heap_caps_malloc(sizeof(JPEGDEC), MALLOC_CAP_SPIRAM);
-	if (!jpeg_malloc)
-		exit(556);
+	if (!jpeg_malloc) exit(556);
 	jpeg = new (jpeg_malloc) JPEGDEC();
 	puts("jpeg allocated!");
 }
@@ -73,8 +67,7 @@ int th1_command = 2, analysis_init = 0;
 extern "C" void *th1_func(void *socket) {
 	uint8_t *buff = (uint8_t *)heap_caps_aligned_alloc(
 		16, GS_WIDTH * GS_HEIGHT * 2, MALLOC_CAP_SPIRAM);
-	if (!buff)
-		exit(556);
+	if (!buff) exit(556);
 	puts("TH1 buffers allocated!");
 	esp_task_wdt_delete(NULL);
 	time_t start, end;

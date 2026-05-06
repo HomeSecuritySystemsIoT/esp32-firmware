@@ -1,7 +1,6 @@
 #ifndef _H_JPEG_
 #define _H_JPEG_
-#include "esp_camera.h"
-
+#include "../peripherals/camera.h"
 #ifdef __cplusplus
 #include "JPEGDEC/JPEGDEC.h"
 extern "C" {
