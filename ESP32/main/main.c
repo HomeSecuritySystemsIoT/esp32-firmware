@@ -1,16 +1,26 @@
-#include "esp_crt_bundle.h"
-#include "esp_http_client.h"
 #include "includes.h"
+#include <stdio.h>
+
+#include "networking/http_website.h"
 #include "networking/soft_ap_sub.h"
 #include "networking/station_wifi.h"
+#include "networking/wifi_common.h"
+
 #include "peripherals/camera.h"
 #include "peripherals/led.h"
+
 #include "utilities/dns_hijack.h"
 #include "utilities/factory_reset.h"
 #include "utilities/tls.h"
 
 #include "utilities/jpeg.h"
-#include <stdio.h>
+
+#include "esp_crt_bundle.h"
+#include "esp_http_client.h"
+#include "esp_pthread.h"
+#include "esp_sntp.h"
+#include "esp_spiffs.h"
+#include "esp_task_wdt.h"
 
 // server information for tcp/tls connection
 #define SERVER_IP "51.210.107.234"

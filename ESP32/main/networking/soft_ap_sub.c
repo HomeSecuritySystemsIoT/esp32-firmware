@@ -4,6 +4,8 @@
  *  Created on: 1 maj 2026
  *      Author: Dawid
  */
+#include "esp_log.h"
+#include "esp_mac.h"
 #include "includes.h"
 #include "wifi_common.h"
 static void wifi_event_handler(void *arg, esp_event_base_t event_base,
