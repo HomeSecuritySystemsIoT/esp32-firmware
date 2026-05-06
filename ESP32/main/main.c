@@ -499,12 +499,10 @@ void app_main(void) {
 		if (sync_and_handle_command(tls, receive_buff) < 0) {
 			// return;
 		}
-		if (send_frame_len(tls) < 0) {
-			// return;
-		}
-		if (send_frame_buf(tls) < 0) {
-			// return;
-		}
+
+		if (send_frame_len(tls) < 0) return;
+		if (send_frame_buf(tls) < 0) return;
+
 		release_frame();
 	}
 }
