@@ -32,6 +32,7 @@ void set_led(int red, int green, int blue) {
 	led_strip_set_pixel(led_strip, 0, (uint8_t)(red * LED_BRIGHTNESS),
 						(uint8_t)(green * LED_BRIGHTNESS),
 						(uint8_t)(blue * LED_BRIGHTNESS));
+	led_strip_refresh(led_strip);
 }
 
 void blink_led(void) {
@@ -64,7 +65,6 @@ void blink_led(void) {
 	// pixel_buff_led[2] = b; // BLUE
 
 	set_led(r, g, b);
-	led_strip_refresh(led_strip);
 }
 
 void init_leds(void) { configure_led(); }
