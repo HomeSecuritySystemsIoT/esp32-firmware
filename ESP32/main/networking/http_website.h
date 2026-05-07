@@ -22,6 +22,7 @@ extern vstr wifi_name, wifi_password;
 extern vstr claim_token;
 extern vstr backend_url;
 extern int has_wifi;
+httpd_handle_t start_webserver(void);
 esp_err_t stop_webserver(httpd_handle_t server);
 extern httpd_handle_t *SERVER;
 #endif /* NETWORKING_HTTP_WEBSITE_H_ */

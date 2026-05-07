@@ -79,6 +79,13 @@ void setup_wifi(void) {
 		wifi_init_softap();
 		start_dns_hijack();
 
+		// Pre-start servers immediately so captive portal probes are handled
+		// as soon as the phone gets a DHCP address — avoids a timing race
+		// where Android probes before connect_handler would have started the
+		// server. connect_handler becomes a no-op since server != NULL.
+		server = start_webserver();
+		SERVER = &server;
+
 		ESP_ERROR_CHECK(esp_event_handler_register(
 			WIFI_EVENT, WIFI_EVENT_AP_STACONNECTED, &connect_handler, &server));
 
