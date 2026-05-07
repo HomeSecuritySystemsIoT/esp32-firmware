@@ -1,13 +1,12 @@
 #define CONFIG_BLINK_LED_STRIP_BACKEND_RMT 1
-#include "driver/gpio.h"
-#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "led_strip.h"
 #include <stdio.h>
-// #include "led_strip_types.h"
-#include "sdkconfig.h"
+
 #define BLINK_GPIO 48
+#define LED_BRIGHTNESS 0.05f
+
 uint8_t *pixel_buff_led;
 uint8_t r = 255, g = 0, b = 0;
 static led_strip_handle_t led_strip;
@@ -30,8 +29,9 @@ void configure_led(void) {
 }
 
 void set_led(int red, int green, int blue) {
-	led_strip_set_pixel(led_strip, 0, red, green, blue);
-	led_strip_refresh(led_strip);
+	led_strip_set_pixel(led_strip, 0, (uint8_t)(red * LED_BRIGHTNESS),
+						(uint8_t)(green * LED_BRIGHTNESS),
+						(uint8_t)(blue * LED_BRIGHTNESS));
 }
 
 void blink_led(void) {
