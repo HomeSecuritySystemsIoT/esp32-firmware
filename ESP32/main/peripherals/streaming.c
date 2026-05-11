@@ -1,7 +1,6 @@
 #include "peripherals/streaming.h"
 
 #include "peripherals/camera.h"
-#include "utilities/jpeg.h"
 #include "utilities/runtime.h"
 #include "utilities/tls.h"
 
@@ -60,36 +59,47 @@ static int init_camera_and_send_status(struct esp_tls *tls,
 	return send_init_status(tls, receive_buff, packet_size);
 }
 
-static void handle_command(struct esp_tls *tls, camera_fb_t *fb,
-						   char *receive_buff) {
+/* Returns 0=continue, 1=camera stopped+restarted (frame already released),
+ * -1=error */
+static int handle_command(struct esp_tls *tls, camera_fb_t *fb,
+						  char *receive_buff) {
 	switch (*receive_buff) {
 	case 'G':
 		break;
 	case 'M':
 		break;
-	case 'S':
+	case 'S': {
 		puts("Camera feed turned off");
-		int wait = 1;
-		while (wait) {
+		esp_camera_fb_return(fb);
+		esp_camera_deinit();
+
+		size_t msg_len = sprintf(receive_buff, "camera_stopped\n");
+		esp_tls_conn_write(tls, (char *)&msg_len, 4);
+		esp_tls_conn_write(tls, receive_buff, msg_len);
+
+		while (1) {
 			ssize_t ret = esp_tls_conn_read(tls, receive_buff, 1);
 			if (ret <= 0) {
-				esp_camera_fb_return(fb);
 				esp_tls_conn_destroy(tls);
-				exit(400);
+				return -1;
 			}
-			switch (*receive_buff) {
-			case 'G':
-				wait = 0;
+			if (*receive_buff == 'G') {
 				puts("Camera feed turned on");
+				init_camera();
+
+				msg_len = sprintf(receive_buff, "camera_started\n");
+				esp_tls_conn_write(tls, (char *)&msg_len, 4);
+				esp_tls_conn_write(tls, receive_buff, msg_len);
 				break;
 			}
 		}
-		break;
+		return 1;
+	}
 	default:
 		printf("Unknown command: %c\n", *receive_buff);
-		puts("Unknown command");
 		break;
 	}
+	return 0;
 }
 
 struct esp_tls *startup_phase(char *receive_buff, int *client_fd_tcp) {
@@ -143,8 +153,7 @@ int sync_and_handle_command(struct esp_tls *tls, char *receive_buff) {
 		return -1;
 	}
 
-	handle_command(tls, fb, receive_buff);
-	return 0;
+	return handle_command(tls, fb, receive_buff);
 }
 
 int send_frame_len(struct esp_tls *tls) {

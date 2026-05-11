@@ -52,6 +52,8 @@ static camera_config_t camera_config = {
 	.grab_mode = CAMERA_GRAB_WHEN_EMPTY, // CAMERA_GRAB_LATEST
 	.fb_location = CAMERA_FB_IN_PSRAM};
 
+camera_fb_t *fb = NULL;
+
 esp_err_t init_camera() {
 	vTaskDelay(pdMS_TO_TICKS(1000));
 	esp_err_t err = esp_camera_init(&camera_config);

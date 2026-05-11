@@ -42,13 +42,11 @@ void app_main(void) {
 	esp_task_wdt_delete(NULL);
 
 	while (1) {
-		int ret2 = capture_frame(tls);
+		if (capture_frame(tls) < 0) return;
 
-		if (ret2 < 0) return;
-
-		if (sync_and_handle_command(tls, receive_buff) < 0) {
-			// return;
-		}
+		int cmd_ret = sync_and_handle_command(tls, receive_buff);
+		if (cmd_ret < 0) return;
+		if (cmd_ret > 0) continue; // frame already released by stop handler
 
 		if (send_frame_len(tls) < 0) return;
 		if (send_frame_buf(tls) < 0) return;
